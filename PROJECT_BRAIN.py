@@ -99,11 +99,11 @@ APP_MANIFEST = [
      "shortcut": "Ctrl+Alt+L", "ram_mb": 40, "ui": "PySide6", "desc": "Markdown notes with live preview (single file)"},
     {"id": "mariner", "name": "Mariner", "entry": "apps/Mariner/main.py",
      "shortcut": "Ctrl+Alt+E", "ram_mb": 20, "ui": "PySide6", "desc": "Scientific calculator, recursive-descent parser (single file)"},
-    {"id": "current", "name": "Current Telemetry", "entry": "apps/current/main.py",
+    {"id": "current", "name": "Current Telemetry", "entry": "apps/Current/main.py",
      "shortcut": "Ctrl+Alt+C", "ram_mb": 15, "ui": "PySide6", "desc": "System telemetry monitor (single file)"},
-    {"id": "harbor", "name": "Harbor File Manager", "entry": "apps/harbor/main.py",
+    {"id": "harbor", "name": "Harbor File Manager", "entry": "apps/Harbor/main.py",
      "shortcut": "Ctrl+Alt+H", "ram_mb": 30, "ui": "PySide6", "desc": "Keyboard-first dual-pane file manager (single file)"},
-    {"id": "tide", "name": "Tide Terminal", "entry": "apps/tide/main.py",
+    {"id": "tide", "name": "Tide Terminal", "entry": "apps/Tide/main.py",
      "shortcut": "Ctrl+Alt+T", "ram_mb": 25, "ui": "PySide6", "desc": "Tabbed terminal with pure-Python internal shell"},
     {"id": "anchor", "name": "Anchor Settings", "entry": "apps/anchor/main.py",
      "shortcut": "Ctrl+Alt+,", "ram_mb": 20, "ui": "PySide6", "desc": "Control center / system settings (single file)"},
@@ -359,7 +359,7 @@ APPS = {
         ],
     },
     "tide": {
-        "desc": "Tabbed terminal. apps/tide/shell.py = pure-Python InternalShell (no external shell); apps/tide/main.py -> TideWindow.",
+        "desc": "Tabbed terminal. apps/Tide/shell.py = pure-Python InternalShell (no external shell); apps/Tide/main.py -> TideWindow.",
         "ram": 25,
         "features": [
             "InternalShell: tokenizer (quotes/escapes, && || ; | < > >>), pipelines, $VAR/~ expansion, 30 built-ins, direct Popen externals (shell=False, streaming), request_abort for Ctrl+C",

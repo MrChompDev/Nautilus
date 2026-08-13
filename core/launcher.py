@@ -87,7 +87,7 @@ APP_MANIFEST: dict[str, AppEntry] = {
     ),
     "current": AppEntry(
         name="Current Telemetry",
-        entry="apps/current/main.py",
+        entry="apps/Current/main.py",
         shortcut="Ctrl+Alt+C",
         icon="📊",
         logo_id="current",
@@ -96,7 +96,7 @@ APP_MANIFEST: dict[str, AppEntry] = {
     ),
     "harbor": AppEntry(
         name="Harbor File Manager",
-        entry="apps/harbor/main.py",
+        entry="apps/Harbor/main.py",
         shortcut="Ctrl+Alt+H",
         icon="📁",
         logo_id="harbor",
@@ -105,7 +105,7 @@ APP_MANIFEST: dict[str, AppEntry] = {
     ),
     "tide": AppEntry(
         name="Tide Terminal",
-        entry="apps/tide/main.py",
+        entry="apps/Tide/main.py",
         shortcut="Ctrl+Alt+T",
         icon="⌨",
         logo_id="tide",
