@@ -1,0 +1,30 @@
+# Nautilus OS — project lint configuration (ruff)
+#
+# Curated rule set: real bugs (F), syntax (E9), basic style (E4/E7),
+# import hygiene (I), modernization (UP), bugbear (B), comprehensions (C),
+# and performance hints (PERF). Deliberately smaller than ruff's default
+# so the workspace stays quiet and the signal stays high.
+line-length = 120
+target-version = "py313"
+exclude = ["pipcache", "assets", "tests", ".git", "data", "apps/Surfline/assets"]
+
+[lint]
+select = ["E4", "E7", "E9", "F", "I", "UP", "B", "C", "PERF"]
+ignore = [
+    "BLE001",  # broad/bare excepts — desktop UI code catches defensively
+    "S110",    # try/except: pass — intentional in UI event handlers
+    "DTZ005",  # naive datetime.now() — desktop app, local time is fine
+    "DTZ006",
+    "N999",    # scratch/test module names (run_*.py, test_*.py)
+    "RUF012",  # class-level constant dicts (e.g. Mariner SAFE_FUNCS)
+    "RUF013",  # implicit Optional in defaults — noisy, no behavior impact
+    "RUF059",  # unused unpacked variable — style preference
+    "PLW1510", # subprocess.run without check — GUI apps may skip
+    "G010",    # logging.warn legacy alias — not a bug
+    "E402",    # imports after sys.path setup — required for standalone app launches
+    "C901",    # function complexity — refactoring hint, not a defect
+    "PERF401", # manual list comprehension — micro-optimization
+    "C401",    # unnecessary generator in set/dict — micro-optimization
+    "C416",    # unnecessary comprehension — micro-optimization
+    "B007",    # unused loop control variable — style preference
+]

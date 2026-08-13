@@ -1,0 +1,49 @@
+# Kraken AI — packaging.
+# Install the CLI anywhere:
+#   pip install .
+# Install with the PySide6 desktop app (kraken-gui):
+#   pip install ".[gui]"
+# The engine itself is pure Python stdlib — no mandatory dependencies.
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "kraken-ai"
+version = "1.0.0"
+description = "Zero-cost, local-first agentic AI engine and multi-agent workforce for developers."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+keywords = ["ai", "agent", "cli", "tui", "ollama", "lmstudio", "local-first", "agentic"]
+classifiers = [
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+]
+
+[project.optional-dependencies]
+gui = ["PySide6>=6.5.0"]
+
+[project.scripts]
+kraken = "apps.kraken.cli:main"
+kraken-gui = "apps.kraken.main:main"
+
+[project.urls]
+Repository = "https://github.com/anomalyco/Nautilus"
+
+[tool.setuptools]
+packages = [
+    "apps.kraken",
+    "apps.kraken.engine",
+    "apps.kraken.ui",
+]
+
+[tool.setuptools.data-files]
+"share/kraken/agents" = ["agents/DatabaseArchitect.md"]
+

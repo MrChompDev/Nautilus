@@ -1,0 +1,6 @@
+# Kraken AI — per-app dependencies
+# Shares the root requirements.txt (PySide6 + requests). The engine itself
+# only needs the Python standard library (sqlite3, urllib, json) plus a
+# reachable local model backend (Ollama / LM Studio / vLLM / llama.cpp).
+
+requests>=2.31.0
