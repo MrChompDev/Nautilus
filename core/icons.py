@@ -648,25 +648,36 @@ def ensure_all_logos():
             pix.save(path, "PNG")
 
 
+def _disk_logo(app_id: str) -> QPixmap | None:
+    """Load a cached logo PNG from disk (AI-generated assets land here)."""
+    path = _logo_path(app_id)
+    if not os.path.exists(path):
+        return None
+    pix = QPixmap(path)
+    return None if pix.isNull() else pix
+
+
 def get_logo(app_id: str, size: int = None) -> QIcon:
-    """Get an app logo as QIcon. Generates and caches automatically."""
+    """Get an app logo as QIcon. Prefers the disk cache (assets/logos/), then
+    generates programmatically. Caches in memory."""
     if app_id not in _cache:
-        gen = _GENERATORS.get(app_id)
-        if gen:
-            pix = gen()
-            _cache[app_id] = pix
-        else:
-            # Fallback: simple colored square with letter
-            pm = QPixmap(128, 128)
-            pm.fill(Qt.transparent)
-            p = QPainter(pm)
-            p.fillRect(0, 0, 128, 128, QColor(COLORS["slate_navy"]))
-            p.setPen(QColor(COLORS["seafoam"]))
-            font = QFont("JetBrains Mono", 50, QFont.Bold)
-            p.setFont(font)
-            p.drawText(pm.rect(), Qt.AlignCenter, app_id[0].upper())
-            p.end()
-            _cache[app_id] = pm
+        pix = _disk_logo(app_id)
+        if pix is None:
+            gen = _GENERATORS.get(app_id)
+            if gen:
+                pix = gen()
+            else:
+                # Fallback: simple colored square with letter
+                pix = QPixmap(128, 128)
+                pix.fill(Qt.transparent)
+                p = QPainter(pix)
+                p.fillRect(0, 0, 128, 128, QColor(COLORS["slate_navy"]))
+                p.setPen(QColor(COLORS["seafoam"]))
+                font = QFont("JetBrains Mono", 50, QFont.Bold)
+                p.setFont(font)
+                p.drawText(pix.rect(), Qt.AlignCenter, app_id[0].upper())
+                p.end()
+        _cache[app_id] = pix
 
     pix = _cache[app_id]
     if size:

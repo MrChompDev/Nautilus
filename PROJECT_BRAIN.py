@@ -197,6 +197,18 @@ CORE_MODULES = [
         "notes": "Layers: linear-gradient bg -> 160 seeded stars -> 8-spoke wheel -> anchor -> 30 bubbles -> 3 depth waves. Seeded RNG (random.Random(42)) = deterministic. Resolution-keyed cache.",
     },
     {
+        "file": "core/ai_assets.py", "lines": 288,
+        "purpose": "Opt-in AI asset generator: wallpapers + app icons via a local LM Studio image model (Qwen-Image), OpenAI-compatible /v1/images/generations. Pure stdlib HTTP. Writes the SAME output paths as wallpaper.py/icons.py.",
+        "classes": {},
+        "funcs": [
+            "list_models() -> list[str]", "discover_model() -> str (auto-pick qwen-image)",
+            "generate_image_bytes(prompt,size,model,timeout) -> bytes",
+            "generate_wallpaper(width,height,model,prompt,force) -> path (gen <=1.4MP, upscaled)",
+            "generate_icons(model,force) -> list[path] (512px gen -> 128px cache)",
+        ],
+        "notes": "CLI: python3 -m core.ai_assets --wallpaper | --icons [-W -H -m --prompt -f -y]. Env: NAUTILUS_LM_URL (default http://localhost:1234/v1), NAUTILUS_AI_MODEL. Icons: 18 prompts in ICON_PROMPTS with shared STYLE prefix; QImage smooth-scale, no QApplication needed. icons.py get_logo() prefers assets/logos/*.png on disk, so AI icons are picked up at runtime automatically.",
+    },
+    {
         "file": "core/security/cli.py", "lines": 164,
         "purpose": "argparse CLI for the opt-in red/blue team toolkit. Run: python -3.13 -m core.security.cli <cmd>",
         "classes": {},
