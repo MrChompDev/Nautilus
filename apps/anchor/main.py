@@ -16,7 +16,7 @@ setup_qt_environment()
 
 from PySide6.QtCore import QSize, Qt, QThread
 from PySide6.QtCore import Signal as QSignal
-from PySide6.QtGui import QColor, QFont, QPalette
+from PySide6.QtGui import QColor, QFont, QIcon, QPalette, QPixmap
 from PySide6.QtWidgets import (
     QApplication,
     QCheckBox,
@@ -39,6 +39,7 @@ from PySide6.QtWidgets import (
 )
 
 try:
+    from core import wallpapers
     from core.icons import get_logo
     from core.theme import (
         COLORS,
@@ -48,6 +49,7 @@ try:
         get_global_stylesheet,
     )
 except ImportError:
+    wallpapers = None
     COLORS = {
         "abyss_navy": "#081626", "slate_navy": "#0E2238", "deep_navy": "#050D14",
         "void_black": "#02060A", "seafoam": "#00F2C2", "seafoam_dim": "#00C9A0",
@@ -585,6 +587,162 @@ class AudioPanel(QWidget):
 
 
 # ═══════════════════════════════════════════════════════════════
+#  WALLPAPER PANEL
+# ═══════════════════════════════════════════════════════════════
+
+class WallpaperPanel(QWidget):
+    """Desktop wallpaper theme picker + animation toggle + AI regeneration."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        layout = QVBoxLayout(self)
+        layout.setSpacing(SPACING["md"])
+
+        info = QLabel(
+            "Choose a desktop wallpaper theme. Animated themes add a subtle living "
+            "ambient layer (drifting bioluminescence) over the base image."
+        )
+        info.setWordWrap(True)
+        info.setStyleSheet(
+            f"color: {COLORS['text_secondary']}; font-family: '{FONTS['ui']}'; "
+            f"font-size: {FONTS['size_sm']}px;"
+        )
+        layout.addWidget(info)
+
+        # ── Theme list with previews ──
+        group = make_group("Wallpaper Themes")
+        group_layout = QVBoxLayout(group)
+        group_layout.setSpacing(SPACING["sm"])
+
+        self._list = QListWidget()
+        self._list.setIconSize(QSize(132, 74))
+        self._list.setSpacing(2)
+        self._list.setStyleSheet(f"""
+            QListWidget {{
+                background: {COLORS['deep_navy']}; color: {COLORS['hd_white']};
+                border: 1px solid {COLORS['border']};
+                font-family: "{FONTS['mono']}"; font-size: {FONTS['size_sm']}px;
+                padding: 4px;
+            }}
+            QListWidget::item {{ padding: 4px 6px; }}
+            QListWidget::item:selected {{ background: {COLORS['seafoam_deep']};
+                color: {COLORS['seafoam']}; }}
+        """)
+        self._list.itemClicked.connect(self._select_theme)
+        group_layout.addWidget(self._list)
+        layout.addWidget(group)
+
+        # ── Animation toggle ──
+        anim_group = make_group("Animation")
+        anim_layout = QVBoxLayout(anim_group)
+        anim_layout.setSpacing(SPACING["sm"])
+        self._anim_cb = QCheckBox("Animate Wallpaper (ambient bioluminescence)")
+        self._anim_cb.setStyleSheet(
+            f"color: {COLORS['hd_white']}; font-family: '{FONTS['mono']}';"
+        )
+        anim_layout.addWidget(self._anim_cb)
+        layout.addWidget(anim_group)
+
+        # ── AI regeneration (detached, survives Anchor closing) ──
+        regen_group = make_group("AI Regeneration")
+        regen_layout = QVBoxLayout(regen_group)
+        regen_layout.setSpacing(SPACING["sm"])
+
+        self._regen_btn = QPushButton("\U0001f916  Regenerate Wallpapers with AI (FLUX.2-klein)")
+        self._regen_btn.setStyleSheet(f"""
+            QPushButton {{
+                background: {COLORS['seafoam_deep']}; color: {COLORS['seafoam']};
+                border: 1px solid {COLORS['seafoam']}; padding: 6px 16px;
+                font-family: "{FONTS['mono']}"; font-size: {FONTS['size_sm']}px;
+            }}
+            QPushButton:hover {{ background: {COLORS['seafoam']}; color: {COLORS['void_black']}; }}
+        """)
+        self._regen_btn.clicked.connect(self._regen_ai)
+        regen_layout.addWidget(self._regen_btn)
+
+        self._regen_status = QLabel("")
+        self._regen_status.setWordWrap(True)
+        self._regen_status.setStyleSheet(
+            f"color: {COLORS['text_muted']}; font-family: '{FONTS['mono']}'; "
+            f"font-size: {FONTS['size_xs']}px;"
+        )
+        regen_layout.addWidget(self._regen_status)
+        layout.addWidget(regen_group)
+
+        layout.addStretch()
+
+        # ── wire state ──
+        self._animated_init = False
+        if wallpapers is not None:
+            self._anim_cb.setChecked(wallpapers.get_animated())
+        self._animated_init = True
+        self._anim_cb.toggled.connect(self._toggle_animated)
+        self._reload_themes()
+
+    # ── behaviour ──
+
+    def _reload_themes(self):
+        if wallpapers is None:
+            return
+        current = wallpapers.get_theme()
+        self._list.clear()
+        for theme in wallpapers.list_themes():
+            try:
+                path = wallpapers.resolve_wallpaper(theme["id"], 1920, 1080)
+                pm = QPixmap(path)
+                icon = QIcon(pm.scaled(132, 74, Qt.IgnoreAspectRatio,
+                                       Qt.SmoothTransformation))
+            except Exception:
+                icon = QIcon()
+            marker = "\u25cf " if theme["id"] == current else "    "
+            tag = "  [animated]" if theme.get("animated") else ""
+            item = QListWidgetItem(icon, f"{marker}{theme['name']}{tag}")
+            item.setForeground(QColor(COLORS["hd_white"]))
+            item.setData(Qt.UserRole, theme["id"])
+            if theme["id"] == current:
+                item.setForeground(QColor(COLORS["seafoam"]))
+            self._list.addItem(item)
+
+    def _select_theme(self, item):
+        if wallpapers is None:
+            return
+        theme_id = item.data(Qt.UserRole)
+        wallpapers.set_theme(theme_id)
+        self._reload_themes()
+
+    def _toggle_animated(self, enabled: bool):
+        if not self._animated_init or wallpapers is None:
+            return
+        wallpapers.set_animated(enabled)
+
+    def _regen_ai(self):
+        if wallpapers is None:
+            self._regen_status.setText("AI assets unavailable in this environment.")
+            return
+        import subprocess
+        script = os.path.join(PROJECT_ROOT, "core", "ai_assets.py")
+        log_dir = os.path.join(os.path.expanduser("~"), ".nautilus", "logs")
+        os.makedirs(log_dir, exist_ok=True)
+        log_path = os.path.join(log_dir, "ai_assets.log")
+        try:
+            with open(log_path, "a", encoding="utf-8") as log_fh:
+                subprocess.Popen(
+                    [sys.executable, script, "--wallpapers"],
+                    cwd=PROJECT_ROOT,
+                    stdout=log_fh,
+                    stderr=log_fh,
+                    stdin=subprocess.DEVNULL,
+                    start_new_session=True,
+                )
+            self._regen_status.setText(
+                "AI regeneration launched in the background (CPU ~4 min per image, "
+                f"all 6 themes \u2248 25 min). Progress: {log_path}"
+            )
+        except OSError as e:
+            self._regen_status.setText(f"Could not launch regeneration: {e}")
+
+
+# ═══════════════════════════════════════════════════════════════
 #  THEME OVERRIDE PANEL
 # ═══════════════════════════════════════════════════════════════
 
@@ -795,6 +953,7 @@ class AnchorWindow(QMainWindow):
         tabs.addTab(DisplayPanel(), get_logo("anchor_display"), "  Display")
         tabs.addTab(NetworkPanel(), get_logo("anchor_network"), "  Network")
         tabs.addTab(AudioPanel(), get_logo("anchor_audio"), "  Audio")
+        tabs.addTab(WallpaperPanel(), get_logo("anchor_theme"), "  Wallpaper")
         tabs.addTab(ThemePanel(), get_logo("anchor_theme"), "  Theme")
         tabs.addTab(AboutPanel(), get_logo("anchor_about"), "  About")
 

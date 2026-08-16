@@ -106,7 +106,7 @@ APP_MANIFEST = [
     {"id": "tide", "name": "Tide Terminal", "entry": "apps/Tide/main.py",
      "shortcut": "Ctrl+Alt+T", "ram_mb": 25, "ui": "PySide6", "desc": "Tabbed terminal with pure-Python internal shell"},
     {"id": "anchor", "name": "Anchor Settings", "entry": "apps/anchor/main.py",
-     "shortcut": "Ctrl+Alt+,", "ram_mb": 20, "ui": "PySide6", "desc": "Control center / system settings (single file)"},
+     "shortcut": "Ctrl+Alt+,", "ram_mb": 20, "ui": "PySide6", "desc": "Control center / system settings: Display, Network, Audio, Wallpaper (WallpaperPanel — theme picker w/ previews + animated toggle + AI regen button spawning core.ai_assets detached to ~/.nautilus/logs/ai_assets.log), About"},
     {"id": "reef", "name": "Reef Messenger", "entry": "apps/Reef/main.py",
      "shortcut": "Ctrl+Alt+Z", "ram_mb": 40, "ui": "PySide6", "desc": "Local-first messenger: offline local thread + optional IMAP/SMTP mail"},
     {"id": "kraken", "name": "Kraken AI", "entry": "apps/kraken/main.py",
@@ -124,15 +124,15 @@ CORE_MODULES = [
         "purpose": "Desktop shell entry: login -> NautilusShell (floating glass top bar, wallpaper, glass dock, launchpad, tray, shortcuts).",
         "classes": {
             "TopBar": "Floating 40px glass pill bar (full width, side gaps): logo, running-app indicators, CPU/RAM metrics pill, avatar, clock, fullscreen + shutdown buttons. QTimers: 1s clock / 3s metrics / 2s app poll. Drag-to-move.",
-            "DesktopWallpaper": "Paints generated ocean wallpaper; floating glass clock/greeting card (top-left), hint + low-alpha NAUTILUS OS watermark (bottom). Right-click QMenu (launch apps, app grid, settings, terminate, shutdown).",
+            "DesktopWallpaper": "Paints the configured theme wallpaper (wallpapers.resolve_wallpaper) + ambient bioluminescent animation layer. Glass clock/greeting card (top-left), hint + watermark (bottom). Right-click QMenu: launch apps, app grid, settings, Wallpaper submenu (switch theme + animated toggle), terminate, shutdown. QFileSystemWatcher on ~/.nautilus/wallpaper.json -> live theme/animation switching from Anchor Settings.",
             "DockButton": "Icon-only 52px glass tile with seafoam running dot; polls running state every 2s.",
             "SystemDock": "Centered floating glass dock (radius 18): launchpad toggle button, separator, one DockButton per APP_MANIFEST entry, separator, date/time chip. Drag-to-move.",
             "LaunchpadOverlay": "Full-screen dim overlay (rgba(2,6,10,215)) with centered glass panel: filter QLineEdit + 5-col grid of 128x116 app tiles. Filtering via search.match_apps; Esc closes; dock button / Meta / Ctrl+Alt+G toggle.",
             "NautilusShell": "Frameless maximized shell; owns single AppLauncher; shortcuts (F11, Ctrl+Alt+F/Q/Esc, Meta/Ctrl+Alt+G launchpad); tray menu; launcher on_launch/on_exit hooks; hide-to-tray on close.",
             "SearchOverlay": "Ctrl+Space / Ctrl+Alt+Space global search (apps + local files + web handoff via Surfline).",
         },
-        "funcs": ["main() — boot: log_startup -> QApplication -> palette/stylesheet -> SIGINT/TERM handlers -> ensure_all_logos() -> LoginDialog -> NautilusShell -> app.exec()"],
-        "notes": "PROJECT_ROOT inserted into sys.path before core imports. setup_qt_environment() called before any PySide6 import. Lambda default-arg binding used for closures. Glass surfaces: translucent slate via hex_to_rgba(COLORS['slate_navy'], alpha) so the painted wallpaper glows through; PANEL_RADIUS 14 / DOCK_RADIUS 18."
+        "funcs": ["main() — boot: log_startup -> QApplication -> palette/stylesheet -> SIGINT/TERM handlers -> ensure_all_logos() -> LoginDialog (fullscreen) -> NautilusShell -> app.exec()"],
+        "notes": "PROJECT_ROOT inserted into sys.path before core imports. setup_qt_environment() called before any PySide6 import. Lambda default-arg binding used for closures. Glass surfaces: translucent slate via hex_to_rgba(COLORS['slate_navy'], alpha) so the painted wallpaper glows through; PANEL_RADIUS 14 / DOCK_RADIUS 18. Ambient animation: 40ms QTimer -> wallpapers.AmbientLayer.advance(0.04), recreated when theme OR size changes; base pixmap scaled with IgnoreAspectRatio."
     },
     {
         "file": "core/launcher.py", "lines": 305,
@@ -163,9 +163,9 @@ CORE_MODULES = [
     },
     {
         "file": "core/auth.py", "lines": 641,
-        "purpose": "Login dialog + JSON account store: PBKDF2 hashing, lockout, hashed sessions, full-screen login/register.",
+        "purpose": "Login gate + JSON account store: PBKDF2 hashing, lockout, hashed sessions, full-screen login/register over the live wallpaper.",
         "classes": {
-            "LoginDialog": "500x550 frameless, QStackedWidget (login/register), auto-login via load_session(). get_logged_in_user()/get_account().",
+            "LoginDialog": "Full-screen frameless; paints the configured wallpaper + AmbientLayer, legibility scrim, glass card with real nautilus logo, clock/date top-right, theme watermark bottom; QStackedWidget (login/register), show-password toggle, auto-login via load_session(). get_logged_in_user()/get_account().",
         },
         "funcs": [
             "create_account(username,password,display_name='') -> bool (raises ValueError on policy fail)",
@@ -173,7 +173,7 @@ CORE_MODULES = [
             "save_session(username,remember=False) / load_session() -> str|None / clear_session()",
             "get_account(username)", "get_avatar_initials(display_name)", "generate_avatar(initials,size=100) -> QPixmap",
         ],
-        "notes": "PBKDF2-HMAC-SHA256, 200k iters, verifier 'pbkdf2$<iters>$<salt>$<hex>'. Legacy sha256(salt+password) supported for migration. 5 attempts -> 60s lockout -> 300s escalation at 2x threshold. Session: 256-bit token, SHA-256 hash stored, TTL 14 days. security_log.jsonl is the cross-module contract with core/security/monitor.py. Fallback tokens if core.theme missing.",
+        "notes": "PBKDF2-HMAC-SHA256, 200k iters, verifier 'pbkdf2$<iters>$<salt>$<hex>'. Legacy sha256(salt+password) supported for migration. 5 attempts -> 60s lockout -> 300s escalation at 2x threshold. Session: 256-bit token, SHA-256 hash stored, TTL 14 days. security_log.jsonl is the cross-module contract with core/security/monitor.py. accounts.json/session.json written 0600. Fallback tokens if core.theme missing.",
     },
     {
         "file": "core/qt_env.py", "lines": 40,
@@ -191,22 +191,43 @@ CORE_MODULES = [
     },
     {
         "file": "core/wallpaper.py", "lines": 155,
-        "purpose": "Programmatic deep-ocean wallpaper at screen resolution, cached to assets/wallpaper.png. Requires active QGuiApplication.",
-        "classes": {},
-        "funcs": ["generate_wallpaper(width=1920,height=1080,force=False) -> str (path)"],
-        "notes": "Layers: linear-gradient bg -> 160 seeded stars -> 8-spoke wheel -> anchor -> 30 bubbles -> 3 depth waves. Seeded RNG (random.Random(42)) = deterministic. Resolution-keyed cache.",
-    },
-    {
-        "file": "core/ai_assets.py", "lines": 288,
-        "purpose": "Opt-in AI asset generator: wallpapers + app icons via a local LM Studio image model (Qwen-Image), OpenAI-compatible /v1/images/generations. Pure stdlib HTTP. Writes the SAME output paths as wallpaper.py/icons.py.",
+        "purpose": "Programmatic wallpaper variants (6 themes) at target resolution, cached to assets/wallpapers/<theme>.png. Requires active QGuiApplication.",
         "classes": {},
         "funcs": [
-            "list_models() -> list[str]", "discover_model() -> str (auto-pick qwen-image)",
-            "generate_image_bytes(prompt,size,model,timeout) -> bytes",
-            "generate_wallpaper(width,height,model,prompt,force) -> path (gen <=1.4MP, upscaled)",
-            "generate_icons(model,force) -> list[path] (512px gen -> 128px cache)",
+            "generate_variant(theme_id,width=1920,height=1080,force=False) -> str (path) — per-theme PALETTES",
+            "generate_wallpaper(width=1920,height=1080,force=False) -> str (legacy abyss -> assets/wallpaper.png)",
         ],
-        "notes": "CLI: python3 -m core.ai_assets --wallpaper | --icons [-W -H -m --prompt -f -y]. Env: NAUTILUS_LM_URL (default http://localhost:1234/v1), NAUTILUS_AI_MODEL. Icons: 18 prompts in ICON_PROMPTS with shared STYLE prefix; QImage smooth-scale, no QApplication needed. icons.py get_logo() prefers assets/logos/*.png on disk, so AI icons are picked up at runtime automatically.",
+        "notes": "PALETTES keyed by theme id (abyss/aurora/tide/storm/kelp/stars). Seeded RNG (random.Random) = deterministic. Variants: abyss (stars + depth waves), aurora (ribbons), tide (bubbles), storm (swell + lightning), kelp (strands), stars (mirrored sky). fillRect takes a color/brush, not 4 ints (PySide6 API).",
+    },
+    {
+        "file": "core/wallpapers.py", "lines": 281,
+        "purpose": "Wallpaper system: theme catalog + persisted selection (~/.nautilus/wallpaper.json) + resolution + ambient animation layer.",
+        "classes": {
+            "AmbientLayer": "Seeded drifting bioluminescent motes (~44 particles) + shimmer bands, accent per theme; advance(dt) + draw(painter); cheap enough for Pi-class CPU at 25fps.",
+        },
+        "funcs": [
+            "list_themes() -> list[dict] (id/name/description/animated)", "theme_info(theme_id)", "theme_accent(theme_id) -> (r,g,b)",
+            "load_settings()/save_settings(theme,animated)/get_theme()/get_animated()/set_theme()/set_animated()",
+            "resolve_wallpaper(theme_id,width,height,force=False) -> str — cached PNG -> legacy copy (abyss) -> programmatic generate_variant",
+        ],
+        "notes": "Config at ~/.nautilus/wallpaper.json (atomic tmp+os.replace). THEMES: abyss, aurora, tide, storm, kelp, stars. Resolution order = icons.py/ai_assets.py convention; ai_assets overwrites the same output paths. Consumed by core/main.py (DesktopWallpaper), core/auth.py (LoginDialog) and apps/anchor/main.py (WallpaperPanel).",
+    },
+    {
+        "file": "core/ai_assets.py", "lines": 355,
+        "purpose": "Opt-in AI asset generator: wallpapers + app icons via a local ComfyUI server (FLUX.2-klein 4B distilled, GGUF Q4_K_M + qwen_3_4b text encoder + flux2-vae). Pure stdlib HTTP. Writes the SAME output paths as wallpaper.py/icons.py.",
+        "classes": {},
+        "funcs": [
+            "list_models() -> list[str] (UnetLoaderGGUF combo via /object_info)",
+            "discover_model() -> str (auto-pick klein/flux unet)",
+            "_resolve_model(hint) -> str (substring match over installed unets)",
+            "discover_clip()/discover_vae() -> str (auto-detect flux2 qwen text encoder + flux2-vae via /object_info)",
+            "generate_image_bytes(prompt,width,height,model,seed,timeout,prefix) -> bytes (queue /prompt, poll /history, fetch /view)",
+            "generate_wallpaper(theme,width,height,model,prompt,force,seed) -> path (gen <=1.4MP, upscaled to 1920x1080)",
+            "generate_wallpapers(model,force,seed) -> list[path] — all 6 themes from WALLPAPER_PROMPTS",
+            "generate_icons(model,force,seed) -> list[path] (512px gen -> 128px cache)",
+            "analyze_image(path) -> dict (mean luma etc.) / check_icons() -> report / generate_icons_where(fix=True) — quality audit",
+        ],
+        "notes": "CLI: python3 -m core.ai_assets --wallpaper [THEME] | --wallpapers | --icons | --check [--fix] [-W -H -m --prompt --seed -f -y]. Env: NAUTILUS_COMFY_URL (default http://localhost:8188), NAUTILUS_AI_MODEL. Distilled klein sampling: euler / 4 steps / CFG 1.0 / ConditioningZeroOut (official template). Icons: 18 prompts in ICON_PROMPTS with shared STYLE prefix (slate-navy tile #0E2238 + seafoam border for visibility on dark UI); QImage smooth-scale, no QApplication needed. --check audits luma (mean < 28 flagged too dark) so icon quality is verifiable without visual inspection. icons.py get_logo() prefers assets/logos/*.png on disk, so AI icons are picked up at runtime automatically. ComfyUI lives at ~/comfyui (venv .venv, CPU torch 2.11, ComfyUI-GGUF node); launch with --cpu.",
     },
     {
         "file": "core/security/cli.py", "lines": 164,
@@ -416,14 +437,14 @@ APPS = {
             "engine/memory.py": "MemoryStore SQLite (~/.kraken/memory.db): remember/recall with token-based pseudo-embedding cosine, find_exact, bump_hit, stats, forget. Table memory(id,signature,embedding,fix,context,source,created_at,hits).",
             "engine/agent.py": "Agent single-loop w/ Self-Correction Loop (memory recall + model re-issue + remember). parse_tool_blocks regex <tool name=\"...\">{json}</tool>. AgentMessage/AgentEvent dataclasses. run_agent() wrapper. max_rounds=12.",
             "engine/orchestrator.py": "Workforce ('Agent Mode'): Planner -> parallel exec agents -> QA/Review -> synthesized === KRAKEN WORKFORCE REPORT ===. max_parallel=3, SubTask/Workforce dataclasses, stop()",
-            "engine/tools.py": "Tool registry: file_read (512KB cap), file_write, file_delete, file_list, terminal_exec (300s timeout). PermissionGate (auto_approve/allow_force/confirm_fn), ToolContext (workspace + resolve_path), TOOL_SCHEMA, _DANGER_PATTERNS (rm -rf /, fork bomb, mkfs, dd), ToolError/PermissionDenied.",
+            "engine/tools.py": "Tool registry: file_read (512KB cap), file_write, file_delete, file_list, terminal_exec (300s timeout). PermissionGate (auto_approve/allow_force/confirm_fn — FAIL-CLOSED: no approver wired -> deny), ToolContext (workspace + resolve_path SANDBOXED to workspace: absolute/../symlink escapes raise ToolError), TOOL_SCHEMA, _DANGER_PATTERNS (rm -rf /, fork bomb, mkfs, dd), ToolError/PermissionDenied.",
             "engine/logger.py": "Bridges to core.logger ('KRK') or stdlib fallback.",
             "cli.py": "REPL (readline history, kraken> prompt, /slash commands), direct tasks, --agent-mode, subcommands: build, doctor, models, memory, config, agent (new/list/show/edit/remove/import/run), keys (list/show/add/set/remove), setup. _gate() approval prompts.",
-            "ui/main_window.py": "KrakenWindow: chat panel + workforce tree + agent library manager; EngineWorker thread; events via queue.Queue drained by 120ms QTimer (no cross-thread Qt calls).",
+            "ui/main_window.py": "KrakenWindow: chat panel + workforce tree + agent library manager; EngineWorker thread; events via queue.Queue drained by 120ms QTimer (no cross-thread Qt calls). Gate has no confirm_fn wired -> tools fail-closed until an approver is added.",
             "ui/chat_panel.py": "ChatPanel: streaming transcript + keyboard-first input, submitted signal.",
             "ui/workforce_view.py": "WorkforceTree QTreeWidget: per-agent status/tokens/event trail, STATUS_COLORS map.",
         },
-        "persistence": "~/.kraken/: config.json, memory.db, keys.json (0600), agents/*.md. Engine is pure stdlib — works standalone, GUI-safe via event queue.",
+        "persistence": "~/.kraken/: config.json (0600), memory.db (0600), keys.json (0600), agents/*.md. Engine is pure stdlib — works standalone, GUI-safe via event queue.",
         "packaging": "pyproject.toml: kraken-ai 1.0.0; console scripts kraken=apps.kraken.cli:main, kraken-gui=apps.kraken.main:main; [gui] extra adds PySide6; data-files share/kraken/agents DatabaseArchitect.md.",
     },
 }

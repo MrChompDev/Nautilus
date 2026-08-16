@@ -48,7 +48,7 @@ class PermissionGate:
             return True
         if self._confirm:
             return self._confirm(action, description, details)
-        return True
+        return False  # fail-closed: no approver wired → deny
 
 
 class ToolResult:
@@ -82,11 +82,17 @@ class ToolContext:
             self.log_hook(level, message)
 
     def resolve_path(self, path: str) -> str:
-        """Resolve a possibly-relative path safely under the workspace."""
+        """Resolve a path strictly inside the workspace (sandboxed)."""
         expanded = os.path.expanduser(os.path.expandvars(path))
         if os.path.isabs(expanded):
-            return os.path.abspath(expanded)
-        return os.path.abspath(os.path.join(self.workspace, expanded))
+            candidate = os.path.abspath(expanded)
+        else:
+            candidate = os.path.abspath(os.path.join(self.workspace, expanded))
+        real = os.path.realpath(candidate)
+        ws = os.path.realpath(self.workspace)
+        if real == ws or real.startswith(ws + os.sep):
+            return real
+        raise ToolError(f"path escapes workspace (blocked): {candidate}")
 
 
 def _truncate(text: str, limit: int = MAX_OUTPUT_BYTES) -> str:

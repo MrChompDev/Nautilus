@@ -24,7 +24,7 @@ from core.qt_env import setup_qt_environment
 
 setup_qt_environment()
 
-from PySide6.QtCore import QPoint, QSize, Qt, QTimer
+from PySide6.QtCore import QFileSystemWatcher, QPoint, QSize, Qt, QTimer
 from PySide6.QtGui import (
     QColor,
     QFont,
@@ -52,6 +52,7 @@ from PySide6.QtWidgets import (
 )
 
 from core import search as search_index
+from core import wallpapers
 from core.auth import LoginDialog, get_avatar_initials
 from core.icons import ensure_all_logos, get_logo, get_pixmap
 from core.launcher import APP_MANIFEST, AppLauncher
@@ -65,7 +66,6 @@ from core.theme import (
     get_global_stylesheet,
     hex_to_rgba,
 )
-from core.wallpaper import generate_wallpaper
 
 # ═══════════════════════════════════════════════════════════════
 #  GLASS SURFACE TOKENS
@@ -314,21 +314,25 @@ class DesktopWallpaper(QWidget):
     def __init__(self, launcher: AppLauncher, username: str = "", parent=None):
         super().__init__(parent)
         self._launcher = launcher
-        self._wallpaper_path = None
         self._username = username
+        self._wallpaper_path = None
+        self._base = QPixmap()
+        self._ambient = None
+        self._settings = wallpapers.load_settings()
+
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self._on_context_menu)
 
-        # Generate the wallpaper at the current screen resolution
-        try:
-            screen = QApplication.primaryScreen()
-            size = screen.size() if screen else None
-            self._wallpaper_path = generate_wallpaper(
-                size.width() if size else 1920,
-                size.height() if size else 1080,
-            )
-        except Exception:
-            self._wallpaper_path = None
+        # Ambient animation tick (25fps — cheap, seeded, CPU-friendly).
+        self._anim_timer = QTimer(self)
+        self._anim_timer.setInterval(40)
+        self._anim_timer.timeout.connect(self._tick_ambient)
+
+        # Live wallpaper switching from Anchor Settings.
+        self._watcher = QFileSystemWatcher([wallpapers.CONFIG_PATH], self)
+        self._watcher.fileChanged.connect(self._on_wallpaper_config_changed)
+
+        self._load_wallpaper()
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(28, 58, 28, 28)
@@ -464,6 +468,23 @@ class DesktopWallpaper(QWidget):
             action.setIcon(get_logo(app_id))
             action.triggered.connect(lambda checked, aid=app_id: self._launcher.launch(aid))
 
+        # ── Wallpaper switcher ──
+        settings = wallpapers.load_settings()
+        wp_menu = menu.addMenu("\U0001f5bc  Wallpaper")
+        for theme in wallpapers.list_themes():
+            action = wp_menu.addAction(
+                ("\u25cf " if theme["id"] == settings["theme"] else "    ")
+                + theme["name"]
+            )
+            action.triggered.connect(
+                lambda checked, tid=theme["id"]: self._set_theme(tid)
+            )
+        wp_menu.addSeparator()
+        anim_action = wp_menu.addAction("Animated Wallpaper")
+        anim_action.setCheckable(True)
+        anim_action.setChecked(settings["animated"])
+        anim_action.toggled.connect(self._set_animated)
+
         menu.addSeparator()
 
         menu.addAction("\U0001f4c1  Harbor File Manager").triggered.connect(
@@ -495,19 +516,90 @@ class DesktopWallpaper(QWidget):
             w._toggle_launchpad()
 
     def paintEvent(self, event):
-        """Paint the generated wallpaper as the desktop background."""
+        """Paint the wallpaper (plus the animated ambient layer when enabled)."""
         painter = QPainter(self)
 
-        if self._wallpaper_path and os.path.exists(self._wallpaper_path):
-            pm = QPixmap(self._wallpaper_path)
-            if not pm.isNull():
-                painter.drawPixmap(self.rect(), pm)
-            else:
-                painter.fillRect(self.rect(), QColor(COLORS["abyss_navy"]))
+        if not self._base.isNull():
+            painter.drawPixmap(self.rect(), self._base)
         else:
             painter.fillRect(self.rect(), QColor(COLORS["abyss_navy"]))
 
+        if self._ambient is not None:
+            self._ambient.draw(painter)
+
         painter.end()
+
+    # ── wallpaper loading & animation ──
+
+    def _load_wallpaper(self):
+        """Resolve the configured theme to a cached PNG and refresh the base."""
+        try:
+            screen = QApplication.primaryScreen()
+            size = screen.size() if screen else None
+            self._wallpaper_path = wallpapers.resolve_wallpaper(
+                self._settings["theme"],
+                size.width() if size else 1920,
+                size.height() if size else 1080,
+            )
+        except Exception:
+            self._wallpaper_path = None
+        self._rebuild_base()
+        self._apply_animation()
+
+    def _rebuild_base(self):
+        self._base = QPixmap()
+        if self._wallpaper_path and os.path.exists(self._wallpaper_path):
+            pm = QPixmap(self._wallpaper_path)
+            if not pm.isNull():
+                w = self.width() if self.width() > 0 else pm.width()
+                h = self.height() if self.height() > 0 else pm.height()
+                self._base = pm.scaled(w, h, Qt.IgnoreAspectRatio,
+                                       Qt.SmoothTransformation)
+        self.update()
+
+    def _apply_animation(self):
+        if self._settings["animated"] and not self._base.isNull():
+            theme = self._settings["theme"]
+            size_changed = (self._ambient is None
+                            or self._ambient._w != max(self.width(), 16)
+                            or self._ambient._h != max(self.height(), 16))
+            theme_changed = getattr(self, "_anim_theme", None) != theme
+            if self._ambient is None or size_changed or theme_changed:
+                self._ambient = wallpapers.AmbientLayer(
+                    max(self.width(), 16), max(self.height(), 16),
+                    accent=wallpapers.theme_accent(theme),
+                )
+                self._anim_theme = theme
+            self._anim_timer.start()
+        else:
+            self._ambient = None
+            self._anim_timer.stop()
+        self.update()
+
+    def _tick_ambient(self):
+        if self._ambient is not None:
+            self._ambient.advance(0.04)
+        self.update()
+
+    def _on_wallpaper_config_changed(self, _path: str):
+        self._settings = wallpapers.load_settings()
+        self._load_wallpaper()
+        self._watcher.addPath(wallpapers.CONFIG_PATH)
+
+    def _set_theme(self, theme_id: str):
+        wallpapers.set_theme(theme_id)
+        self._settings = wallpapers.load_settings()
+        self._load_wallpaper()
+
+    def _set_animated(self, enabled: bool):
+        wallpapers.set_animated(enabled)
+        self._settings["animated"] = enabled
+        self._apply_animation()
+
+    def resizeEvent(self, event):
+        self._rebuild_base()
+        self._apply_animation()
+        super().resizeEvent(event)
 
 
 # ═══════════════════════════════════════════════════════════════

@@ -20,12 +20,13 @@ ACCOUNTS_FILE = os.path.join(DATA_DIR, "accounts.json")
 SESSION_FILE = os.path.join(DATA_DIR, "session.json")
 SECURITY_LOG = os.path.join(DATA_DIR, "security_log.jsonl")
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QTimer
 from PySide6.QtGui import QBrush, QColor, QFont, QLinearGradient, QPainter, QPixmap
 from PySide6.QtWidgets import (
     QCheckBox,
     QDialog,
     QFrame,
+    QHBoxLayout,
     QLabel,
     QLineEdit,
     QPushButton,
@@ -34,11 +35,15 @@ from PySide6.QtWidgets import (
 )
 
 try:
+    from core import wallpapers
+    from core.icons import get_logo
     from core.logger import get_logger
-    from core.theme import COLORS, FONTS, SPACING
+    from core.theme import COLORS, FONTS, SPACING, hex_to_rgba
     _log = get_logger("SYSTEM")
     _log.info("Auth system initialized")
+    _HAS_CORE = True
 except ImportError:
+    _HAS_CORE = False
     COLORS = {
         "abyss_navy": "#081626", "slate_navy": "#0E2238", "deep_navy": "#050D14",
         "void_black": "#02060A", "seafoam": "#00F2C2", "seafoam_dim": "#00C9A0",
@@ -49,6 +54,29 @@ except ImportError:
     FONTS = {"mono": "JetBrains Mono", "ui": "Segoe UI", "size_xs": 10, "size_sm": 11,
              "size_md": 12, "size_lg": 13, "size_xl": 14, "size_xxl": 16}
     SPACING = {"xs": 2, "sm": 4, "md": 8, "lg": 12, "xl": 16, "xxl": 24}
+    wallpapers = None
+
+    def hex_to_rgba(hex_str: str, alpha: int = 255) -> str:
+        value = hex_str.lstrip("#")
+        r = int(value[0:2], 16)
+        g = int(value[2:4], 16)
+        b = int(value[4:6], 16)
+        return f"rgba({r}, {g}, {b}, {alpha})"
+
+    def get_logo(app_id: str, size: int = None):
+        return None
+
+
+def _glass(alpha: int = 205) -> str:
+    return hex_to_rgba(COLORS["slate_navy"], alpha)
+
+
+def _edge() -> str:
+    return hex_to_rgba(COLORS["seafoam"], 48)
+
+
+def _sheen() -> str:
+    return "rgba(238, 244, 248, 26)"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -69,8 +97,10 @@ def _load_accounts() -> dict:
 
 def _save_accounts(accounts: dict):
     _ensure_data_dir()
-    with open(ACCOUNTS_FILE, "w", encoding="utf-8") as f:
+    fd = os.open(ACCOUNTS_FILE, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
         json.dump(accounts, f, indent=2)
+    os.chmod(ACCOUNTS_FILE, 0o600)
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -263,6 +293,7 @@ def save_session(username: str, remember: bool = False):
                 "token": token,
                 "created_at": datetime.now().isoformat(),
             }, f)
+        os.chmod(SESSION_FILE, 0o600)
     elif os.path.exists(SESSION_FILE):
         os.remove(SESSION_FILE)
 
@@ -359,10 +390,54 @@ def generate_avatar(initials: str, size: int = 100) -> QPixmap:
 
 # ═══════════════════════════════════════════════════════════════
 #  LOGIN DIALOG
+#  Full-screen frameless gate that floats over the live wallpaper,
+#  mirroring the desktop's glass + ocean aesthetic.
 # ═══════════════════════════════════════════════════════════════
 
+_GLASS_CARD = f"""
+    background: {_glass(205)};
+    border: 1px solid {_edge()};
+    border-top: 1px solid {_sheen()};
+    border-radius: 18px;
+"""
+
+_FIELD_SS = f"""
+    QLineEdit {{
+        background: {hex_to_rgba(COLORS["deep_navy"], 200)}; color: {COLORS["hd_white"]};
+        border: 1px solid {COLORS["border"]}; padding: 11px 14px;
+        font-family: "{FONTS["mono"]}"; font-size: {FONTS["size_md"]}px;
+        border-radius: 8px;
+    }}
+    QLineEdit:focus {{
+        border-color: {COLORS["seafoam"]}; background: {COLORS["void_black"]};
+    }}
+"""
+
+_LABEL_SS = f"""
+    color: {COLORS["text_muted"]}; font-family: '{FONTS["mono"]}';
+    font-size: {FONTS["size_xs"]}px; letter-spacing: 2px;
+"""
+
+_PRIMARY_BTN_SS = f"""
+    QPushButton {{
+        background: {COLORS["seafoam_deep"]}; color: {COLORS["seafoam"]};
+        border: 1px solid {COLORS["seafoam"]}; padding: 12px;
+        font-family: "{FONTS["mono"]}"; font-size: {FONTS["size_md"]}px;
+        font-weight: bold; letter-spacing: 3px; border-radius: 8px;
+    }}
+    QPushButton:hover {{ background: {COLORS["seafoam"]}; color: {COLORS["void_black"]}; }}
+    QPushButton:pressed {{ background: {COLORS["seafoam_dim"]}; }}
+"""
+
+_GHOST_BTN_SS = f"""
+    QPushButton {{ background: transparent; color: {COLORS["text_secondary"]};
+        border: none; font-family: "{FONTS["ui"]}"; font-size: {FONTS["size_sm"]}px; }}
+    QPushButton:hover {{ color: {COLORS["seafoam"]}; }}
+"""
+
+
 class LoginDialog(QDialog):
-    """Full-screen styled login/register dialog for Nautilus OS."""
+    """Full-screen Nautilus OS login/register gate over the live wallpaper."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -370,64 +445,203 @@ class LoginDialog(QDialog):
         self._logged_in_account = None
 
         self.setWindowTitle("Nautilus OS — Login")
-        self.setFixedSize(500, 550)
         self.setWindowFlags(Qt.Dialog | Qt.FramelessWindowHint)
-        self.setStyleSheet(f"background-color: {COLORS['abyss_navy']};")
+        self.setMouseTracking(True)
+
+        # Wallpaper background + ambient animation, exactly like the desktop.
+        self._base = QPixmap()
+        self._ambient = None
+        self._anim_theme = None
+
+        self._anim_timer = QTimer(self)
+        self._anim_timer.setInterval(40)
+        self._anim_timer.timeout.connect(self._tick_ambient)
 
         self._setup_ui()
+        self._load_wallpaper()
         self._check_auto_login()
+        self.showFullScreen()
+
+    # ── painting: live wallpaper + ambient layer ──
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        if not self._base.isNull():
+            painter.drawPixmap(self.rect(), self._base)
+        else:
+            painter.fillRect(self.rect(), QColor(COLORS["abyss_navy"]))
+        # Legibility scrim so the glass card reads cleanly on any wallpaper.
+        painter.fillRect(self.rect(), QColor(5, 10, 16, 110))
+        if self._ambient is not None:
+            self._ambient.draw(painter)
+        painter.end()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._load_wallpaper()
+
+    def _tick_ambient(self):
+        if self._ambient is not None:
+            self._ambient.advance(0.04)
+        self.update()
+
+    def _load_wallpaper(self):
+        theme = wallpapers.get_theme() if _HAS_CORE else "abyss"
+        try:
+            path = wallpapers.resolve_wallpaper(
+                theme, max(self.width(), 16), max(self.height(), 16),
+            )
+        except Exception:
+            path = None
+        self._base = QPixmap()
+        if path and os.path.exists(path):
+            pm = QPixmap(path)
+            if not pm.isNull():
+                w = self.width() if self.width() > 0 else pm.width()
+                h = self.height() if self.height() > 0 else pm.height()
+                self._base = pm.scaled(w, h, Qt.IgnoreAspectRatio,
+                                       Qt.SmoothTransformation)
+        animated = wallpapers.get_animated() if _HAS_CORE else True
+        if animated:
+            accent = wallpapers.theme_accent(theme) if _HAS_CORE else (0, 242, 194)
+            size_changed = (self._ambient is None
+                            or self._ambient._w != max(self.width(), 16)
+                            or self._ambient._h != max(self.height(), 16))
+            theme_changed = self._anim_theme != theme
+            if self._ambient is None or size_changed or theme_changed:
+                self._ambient = wallpapers.AmbientLayer(
+                    max(self.width(), 16), max(self.height(), 16), accent=accent,
+                )
+                self._anim_theme = theme
+            self._anim_timer.start()
+        else:
+            self._ambient = None
+            self._anim_timer.stop()
+        self.update()
+
+    # ── UI construction ──
 
     def _setup_ui(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(SPACING["xxl"], SPACING["xxl"], SPACING["xxl"], SPACING["xl"])
-        layout.setSpacing(SPACING["md"])
-        layout.setAlignment(Qt.AlignCenter)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(28, 20, 28, 20)
+        outer.setSpacing(0)
 
-        # ── Logo / Brand ──
-        logo = QLabel("\u2693")
-        logo.setAlignment(Qt.AlignCenter)
-        logo.setStyleSheet(f"color: {COLORS['seafoam']}; font-size: 48px;")
-        layout.addWidget(logo)
+        # ── Top bar: clock (right) ──
+        top = QHBoxLayout()
+        top.addStretch(1)
+        self._clock_lbl = QLabel("")
+        self._clock_lbl.setStyleSheet(f"""
+            color: {COLORS["hd_white"]}; font-family: "{FONTS["mono"]}";
+            font-size: 22px; font-weight: bold; background: transparent;
+        """)
+        top.addWidget(self._clock_lbl)
+        self._date_lbl = QLabel("")
+        self._date_lbl.setStyleSheet(f"""
+            color: {COLORS["seafoam"]}; font-family: "{FONTS["mono"]}";
+            font-size: {FONTS["size_sm"]}px; letter-spacing: 2px; background: transparent;
+        """)
+        top.addWidget(self._date_lbl)
+        top.addSpacing(SPACING["md"])
+        outer.addLayout(top)
+
+        outer.addStretch(2)
+
+        # ── Brand header (above the card) ──
+        brand = QVBoxLayout()
+        brand.setSpacing(SPACING["xs"])
+        brand.setAlignment(Qt.AlignCenter)
+        if _HAS_CORE:
+            logo_pix = get_logo("nautilus").pixmap(72, 72)
+            logo_lbl = QLabel()
+            logo_lbl.setPixmap(logo_pix)
+            logo_lbl.setAlignment(Qt.AlignCenter)
+            logo_lbl.setStyleSheet("background: transparent;")
+            brand.addWidget(logo_lbl)
+        else:
+            anchor = QLabel("\u2693")
+            anchor.setAlignment(Qt.AlignCenter)
+            anchor.setStyleSheet(f"color: {COLORS['seafoam']}; font-size: 48px; background: transparent;")
+            brand.addWidget(anchor)
+        brand.addSpacing(SPACING["md"])
 
         title = QLabel("NAUTILUS OS")
         title.setAlignment(Qt.AlignCenter)
         title.setStyleSheet(f"""
-            color: {COLORS['seafoam']}; font-family: "{FONTS['mono']}";
-            font-size: {FONTS['size_xl']}px; font-weight: bold; letter-spacing: 6px;
+            color: {COLORS["seafoam"]}; font-family: "{FONTS["mono"]}";
+            font-size: {FONTS["size_xxl"] + 2}px; font-weight: bold;
+            letter-spacing: 8px; background: transparent;
         """)
-        layout.addWidget(title)
+        brand.addWidget(title)
 
         subtitle = QLabel("Sign in to your desktop")
         subtitle.setAlignment(Qt.AlignCenter)
-        subtitle.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: {FONTS['size_sm']}px;")
-        layout.addWidget(subtitle)
+        subtitle.setStyleSheet(f"""
+            color: {COLORS["text_secondary"]}; font-size: {FONTS["size_sm"]}px;
+            background: transparent;
+        """)
+        brand.addWidget(subtitle)
+        brand.addSpacing(SPACING["xl"])
+        outer.addLayout(brand)
 
-        layout.addSpacing(SPACING["lg"])
+        # ── Centered glass card with login/register stack ──
+        row = QHBoxLayout()
+        row.addStretch(1)
+        card = QFrame()
+        card.setStyleSheet(_GLASS_CARD)
+        card.setFixedWidth(440)
+        card_layout = QVBoxLayout(card)
+        card_layout.setContentsMargins(SPACING["xl"] + 8, SPACING["xl"],
+                                       SPACING["xl"] + 8, SPACING["xl"])
+        card_layout.setSpacing(SPACING["md"])
 
-        # ── Stacked widget (login / register) ──
         self._stack = QStackedWidget()
         self._stack.setStyleSheet("background: transparent;")
+        self._stack.addWidget(self._build_login_page())
+        self._stack.addWidget(self._build_register_page())
+        card_layout.addWidget(self._stack)
 
-        login_page = self._build_login_page()
-        register_page = self._build_register_page()
-
-        self._stack.addWidget(login_page)
-        self._stack.addWidget(register_page)
-        layout.addWidget(self._stack)
-
-        layout.addStretch()
-
-        # ── Error label ──
         self._error_label = QLabel("")
         self._error_label.setAlignment(Qt.AlignCenter)
+        self._error_label.setWordWrap(True)
         self._error_label.setStyleSheet(f"""
-            color: {COLORS['coral']}; font-family: "{FONTS['mono']}";
-            font-size: {FONTS['size_xs']}px; padding: 4px;
+            color: {COLORS["coral"]}; font-family: "{FONTS["mono"]}";
+            font-size: {FONTS["size_xs"]}px; padding: 4px; min-height: 18px;
         """)
-        layout.addWidget(self._error_label)
+        card_layout.addWidget(self._error_label)
 
-        # Center on screen
-        self._center()
+        row.addWidget(card)
+        row.addStretch(1)
+        outer.addLayout(row)
+
+        outer.addStretch(3)
+
+        # ── Bottom bar: watermark ──
+        bottom = QHBoxLayout()
+        watermark = QLabel("NAUTILUS OS  ·  v1.0")
+        watermark.setStyleSheet(f"""
+            color: {COLORS["text_muted"]}; font-family: "{FONTS["mono"]}";
+            font-size: {FONTS["size_xs"]}px; letter-spacing: 3px; background: transparent;
+        """)
+        bottom.addWidget(watermark)
+        bottom.addStretch(1)
+        theme_hint = QLabel("")
+        if _HAS_CORE:
+            theme_hint.setText(f"  {wallpapers.get_theme().upper()}  ")
+        theme_hint.setStyleSheet(f"""
+            color: {COLORS["text_muted"]}; font-family: "{FONTS["mono"]}";
+            font-size: {FONTS["size_xs"]}px; letter-spacing: 2px; background: transparent;
+        """)
+        bottom.addWidget(theme_hint)
+        outer.addLayout(bottom)
+
+        self._update_clock()
+        clock = QTimer(self)
+        clock.timeout.connect(self._update_clock)
+        clock.start(1000)
+
+    def _update_clock(self):
+        self._clock_lbl.setText(time.strftime("%H:%M"))
+        self._date_lbl.setText("   " + time.strftime("%a %d %b %Y").upper())
 
     def _build_login_page(self) -> QFrame:
         page = QFrame()
@@ -435,63 +649,52 @@ class LoginDialog(QDialog):
         layout = QVBoxLayout(page)
         layout.setSpacing(SPACING["md"])
 
-        # Username
         lbl_u = QLabel("USERNAME")
-        lbl_u.setStyleSheet(f"color: {COLORS['text_muted']}; font-family: '{FONTS['mono']}'; font-size: {FONTS['size_xs']}px; letter-spacing: 2px;")
+        lbl_u.setStyleSheet(_LABEL_SS)
         layout.addWidget(lbl_u)
 
         self._login_user = QLineEdit()
         self._login_user.setPlaceholderText("Enter username")
-        self._login_user.setStyleSheet(f"""
-            QLineEdit {{
-                background: {COLORS['deep_navy']}; color: {COLORS['hd_white']};
-                border: 1px solid {COLORS['border']}; padding: 10px 14px;
-                font-family: "{FONTS['mono']}"; font-size: {FONTS['size_md']}px;
-            }}
-            QLineEdit:focus {{ border-color: {COLORS['seafoam']}; background: {COLORS['void_black']}; }}
-        """)
+        self._login_user.setStyleSheet(_FIELD_SS)
         layout.addWidget(self._login_user)
 
-        # Password
         lbl_p = QLabel("PASSWORD")
-        lbl_p.setStyleSheet(f"color: {COLORS['text_muted']}; font-family: '{FONTS['mono']}'; font-size: {FONTS['size_xs']}px; letter-spacing: 2px;")
+        lbl_p.setStyleSheet(_LABEL_SS)
         layout.addWidget(lbl_p)
 
         self._login_pass = QLineEdit()
         self._login_pass.setPlaceholderText("Enter password")
         self._login_pass.setEchoMode(QLineEdit.Password)
-        self._login_pass.setStyleSheet(self._login_user.styleSheet())
+        self._login_pass.setStyleSheet(_FIELD_SS)
         self._login_pass.returnPressed.connect(self._do_login)
         layout.addWidget(self._login_pass)
 
-        # Remember me
+        # Show-password toggle + remember-me row
+        toggles = QHBoxLayout()
+        toggles.setSpacing(SPACING["md"])
+        self._show_pass_cb = QCheckBox("Show password")
+        self._show_pass_cb.setStyleSheet(f"color: {COLORS['text_secondary']}; font-family: '{FONTS['mono']}'; font-size: {FONTS['size_xs']}px;")
+        self._show_pass_cb.toggled.connect(
+            lambda on: self._login_pass.setEchoMode(
+                QLineEdit.Normal if on else QLineEdit.Password)
+        )
+        toggles.addWidget(self._show_pass_cb)
+
         self._remember_cb = QCheckBox("Remember me (auto-login)")
         self._remember_cb.setStyleSheet(f"color: {COLORS['text_secondary']}; font-family: '{FONTS['mono']}'; font-size: {FONTS['size_xs']}px;")
-        layout.addWidget(self._remember_cb)
+        toggles.addWidget(self._remember_cb)
+        toggles.addStretch(1)
+        layout.addLayout(toggles)
 
         layout.addSpacing(SPACING["sm"])
 
-        # Login button
         login_btn = QPushButton("SIGN IN")
-        login_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {COLORS['seafoam_deep']}; color: {COLORS['seafoam']};
-                border: 1px solid {COLORS['seafoam']}; padding: 10px;
-                font-family: "{FONTS['mono']}"; font-size: {FONTS['size_md']}px;
-                font-weight: bold; letter-spacing: 3px;
-            }}
-            QPushButton:hover {{ background: {COLORS['seafoam']}; color: {COLORS['void_black']}; }}
-        """)
+        login_btn.setStyleSheet(_PRIMARY_BTN_SS)
         login_btn.clicked.connect(self._do_login)
         layout.addWidget(login_btn)
 
-        # Switch to register
         switch = QPushButton("Create new account")
-        switch.setStyleSheet(f"""
-            QPushButton {{ background: transparent; color: {COLORS['text_secondary']};
-                border: none; font-family: "{FONTS['ui']}"; font-size: {FONTS['size_sm']}px; }}
-            QPushButton:hover {{ color: {COLORS['seafoam']}; }}
-        """)
+        switch.setStyleSheet(_GHOST_BTN_SS)
         switch.clicked.connect(lambda: self._stack.setCurrentIndex(1))
         layout.addWidget(switch)
 
@@ -508,68 +711,44 @@ class LoginDialog(QDialog):
         title.setStyleSheet(f"color: {COLORS['seafoam']}; font-family: '{FONTS['mono']}'; font-size: {FONTS['size_md']}px; font-weight: bold;")
         layout.addWidget(title)
 
-        # Display name
         lbl_d = QLabel("DISPLAY NAME")
-        lbl_d.setStyleSheet(f"color: {COLORS['text_muted']}; font-family: '{FONTS['mono']}'; font-size: {FONTS['size_xs']}px; letter-spacing: 2px;")
+        lbl_d.setStyleSheet(_LABEL_SS)
         layout.addWidget(lbl_d)
 
         self._reg_display = QLineEdit()
         self._reg_display.setPlaceholderText("Your name")
-        self._reg_display.setStyleSheet(f"""
-            QLineEdit {{
-                background: {COLORS['deep_navy']}; color: {COLORS['hd_white']};
-                border: 1px solid {COLORS['border']}; padding: 10px 14px;
-                font-family: "{FONTS['mono']}"; font-size: {FONTS['size_md']}px;
-            }}
-            QLineEdit:focus {{ border-color: {COLORS['seafoam']}; }}
-        """)
+        self._reg_display.setStyleSheet(_FIELD_SS)
         layout.addWidget(self._reg_display)
 
-        # Username
         lbl_u = QLabel("USERNAME")
-        lbl_u.setStyleSheet(f"color: {COLORS['text_muted']}; font-family: '{FONTS['mono']}'; font-size: {FONTS['size_xs']}px; letter-spacing: 2px;")
+        lbl_u.setStyleSheet(_LABEL_SS)
         layout.addWidget(lbl_u)
 
         self._reg_user = QLineEdit()
         self._reg_user.setPlaceholderText("Choose username")
-        self._reg_user.setStyleSheet(self._reg_display.styleSheet())
+        self._reg_user.setStyleSheet(_FIELD_SS)
         layout.addWidget(self._reg_user)
 
-        # Password
         lbl_p = QLabel("PASSWORD")
-        lbl_p.setStyleSheet(f"color: {COLORS['text_muted']}; font-family: '{FONTS['mono']}'; font-size: {FONTS['size_xs']}px; letter-spacing: 2px;")
+        lbl_p.setStyleSheet(_LABEL_SS)
         layout.addWidget(lbl_p)
 
         self._reg_pass = QLineEdit()
         self._reg_pass.setPlaceholderText("Choose password (min 8 chars, letters + numbers)")
         self._reg_pass.setEchoMode(QLineEdit.Password)
-        self._reg_pass.setStyleSheet(self._reg_display.styleSheet())
+        self._reg_pass.setStyleSheet(_FIELD_SS)
         self._reg_pass.returnPressed.connect(self._do_register)
         layout.addWidget(self._reg_pass)
 
         layout.addSpacing(SPACING["sm"])
 
-        # Register button
         reg_btn = QPushButton("CREATE ACCOUNT")
-        reg_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {COLORS['seafoam_deep']}; color: {COLORS['seafoam']};
-                border: 1px solid {COLORS['seafoam']}; padding: 10px;
-                font-family: "{FONTS['mono']}"; font-size: {FONTS['size_md']}px;
-                font-weight: bold; letter-spacing: 2px;
-            }}
-            QPushButton:hover {{ background: {COLORS['seafoam']}; color: {COLORS['void_black']}; }}
-        """)
+        reg_btn.setStyleSheet(_PRIMARY_BTN_SS)
         reg_btn.clicked.connect(self._do_register)
         layout.addWidget(reg_btn)
 
-        # Switch to login
         switch = QPushButton("\u2190  Back to sign in")
-        switch.setStyleSheet(f"""
-            QPushButton {{ background: transparent; color: {COLORS['text_secondary']};
-                border: none; font-family: "{FONTS['ui']}"; font-size: {FONTS['size_sm']}px; }}
-            QPushButton:hover {{ color: {COLORS['seafoam']}; }}
-        """)
+        switch.setStyleSheet(_GHOST_BTN_SS)
         switch.clicked.connect(lambda: self._stack.setCurrentIndex(0))
         layout.addWidget(switch)
 
@@ -626,13 +805,6 @@ class LoginDialog(QDialog):
             self._logged_in_user = saved_user
             self._logged_in_account = get_account(saved_user)
             self.accept()
-
-    def _center(self):
-        screen = self.screen().availableGeometry()
-        self.move(
-            (screen.width() - self.width()) // 2,
-            (screen.height() - self.height()) // 2,
-        )
 
     def get_logged_in_user(self) -> str | None:
         return self._logged_in_user

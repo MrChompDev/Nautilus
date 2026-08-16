@@ -105,8 +105,10 @@ class KrakenConfig:
         self.ensure_home()
         path = os.path.join(self.home_dir, "config.json")
         try:
-            with open(path, "w", encoding="utf-8") as f:
+            fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
                 json.dump(self.data, f, indent=2)
+            os.chmod(path, 0o600)
         except OSError:
             pass
 
