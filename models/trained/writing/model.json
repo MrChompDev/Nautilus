@@ -1,0 +1,10 @@
+{
+  "id": "writing",
+  "profile": "tiny",
+  "params": 397952,
+  "int8_bytes": 397952,
+  "val_loss": 7.748258018493653,
+  "steps": 80,
+  "tokens": 8713,
+  "trained": "2026-08-16 14:40:48"
+}

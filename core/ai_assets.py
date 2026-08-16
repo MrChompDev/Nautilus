@@ -400,6 +400,108 @@ def generate_icons(model: str | None = None, force: bool = False,
     return written
 
 
+# ═══════════════════════════════════════════════════════════════
+#  Control / button icons
+# ═══════════════════════════════════════════════════════════════
+
+CONTROLS_DIR = os.path.join(ASSETS_DIR, "controls")
+CONTROL_GEN_SIZE = 256
+CONTROL_OUT_SIZE = 64
+
+CONTROL_STYLE = (
+    "Minimalist flat UI control glyph, one bold clean geometric vector icon "
+    "centered on a fully transparent background, thin glowing seafoam (#00F2C2) "
+    "outline stroke, subtle coral (#FF7F50) accent, crisp high contrast, no text, "
+    "no letters, no watermark, no shadows outside the glyph"
+)
+
+CONTROL_PROMPTS = {
+    "play": "right-pointing play triangle",
+    "pause": "two vertical pause bars",
+    "stop": "filled stop square",
+    "skip_forward": "fast-forward double triangle",
+    "skip_back": "rewind double triangle",
+    "restart": "circular arrow with a small tail",
+    "refresh": "circular refresh arrows",
+    "close": "thin X cross",
+    "minimize": "single horizontal line",
+    "maximize": "open rectangle outline",
+    "restore": "two overlapping rectangles",
+    "chevron_up": "upward chevron",
+    "chevron_down": "downward chevron",
+    "chevron_left": "leftward chevron",
+    "chevron_right": "rightward chevron",
+    "expand": "two opposite arrows pointing outward",
+    "collapse": "two opposite arrows pointing inward",
+    "search": "magnifying glass",
+    "folder": "plain file folder",
+    "file": "document sheet with a folded corner",
+    "trash": "open trash bin",
+    "save": "floppy disk",
+    "add": "plain plus sign",
+    "remove": "plain minus sign",
+    "edit": "pencil tip",
+    "check": "bold checkmark",
+    "arrow_up": "upward arrow",
+    "arrow_down": "downward arrow",
+    "arrow_left": "leftward arrow",
+    "arrow_right": "rightward arrow",
+    "back": "leftward arrow with a line",
+    "forward": "rightward arrow with a line",
+    "home": "simple house",
+    "settings": "plain gear",
+    "info": "letter i inside a circle",
+    "warning": "exclamation mark inside a triangle",
+    "error": "x inside a circle",
+    "terminal": "prompt chevron cursor in a window",
+    "run": "play triangle inside a circle",
+    "clear": "sweeping broom",
+    "send": "paper plane",
+    "mic": "microphone",
+    "volume": "speaker with sound waves",
+    "mute": "speaker with a diagonal slash",
+    "image": "framed landscape with a sun",
+    "video": "film strip",
+    "copy": "two overlapping sheets",
+    "download": "downward arrow into a tray",
+    "upload": "upward arrow out of a tray",
+    "clock": "clock face",
+    "calendar": "calendar sheet",
+    "user": "person silhouette",
+    "grid": "four squares in a grid",
+    "list": "three horizontal lines with bullets",
+    "bell": "bell",
+    "more": "three horizontal dots",
+    "lock": "padlock",
+    "unlock": "open padlock",
+    "link": "chain link",
+    "power": "power circle with a slit",
+    "zoom_in": "magnifier with a plus",
+    "zoom_out": "magnifier with a minus",
+}
+
+
+def generate_controls(model: str | None = None, force: bool = False,
+                      seed: int | None = None) -> list[str]:
+    """Generate every UI control icon at 256px, cached at 64px in assets/controls."""
+    written = []
+    for name, glyph in CONTROL_PROMPTS.items():
+        out = os.path.join(CONTROLS_DIR, f"{name}.png")
+        if os.path.exists(out) and not force:
+            print(f"[ai_assets] skip  control {name} (cached)")
+            continue
+        prompt = CONTROL_STYLE + ", " + glyph
+        print(f"[ai_assets] control {name} ...")
+        try:
+            data = generate_image_bytes(prompt, CONTROL_GEN_SIZE, CONTROL_GEN_SIZE, model, seed,
+                                        prefix=f"nautilus-ctrl-{name}")
+            _save_scaled(data, out, CONTROL_OUT_SIZE, CONTROL_OUT_SIZE)
+            written.append(out)
+        except RuntimeError as e:
+            print(f"[ai_assets] FAIL  control {name}: {e}", file=sys.stderr)
+    return written
+
+
 def analyze_image(path: str) -> dict:
     """Lightweight quality audit of a cached PNG (no window needed).
 
@@ -494,6 +596,7 @@ def main(argv: list[str] | None = None) -> int:
                     help="regenerate one wallpaper theme (default: abyss)")
     ap.add_argument("--wallpapers", action="store_true", help="regenerate every wallpaper theme")
     ap.add_argument("--icons", action="store_true", help="regenerate all app icons")
+    ap.add_argument("--controls", action="store_true", help="regenerate all UI control icons")
     ap.add_argument("--check", action="store_true",
                     help="audit cached icons and report poor quality (--fix to regenerate)")
     ap.add_argument("--fix", action="store_true",
@@ -507,7 +610,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("-y", "--yes", action="store_true", help="skip confirmation prompts")
     args = ap.parse_args(argv)
 
-    if not (args.wallpaper or args.wallpapers or args.icons or args.check):
+    if not (args.wallpaper or args.wallpapers or args.icons or args.controls or args.check):
         args.wallpaper = "abyss"
 
     # ── Audit mode (works without a server) ──
@@ -550,6 +653,10 @@ def main(argv: list[str] | None = None) -> int:
                 return 0
         generate_icons(model, args.force, args.seed)
         print("[ai_assets] icons -> assets/logos/")
+
+    if args.controls:
+        generate_controls(model, args.force, args.seed)
+        print("[ai_assets] controls -> assets/controls/")
     return 0
 
 

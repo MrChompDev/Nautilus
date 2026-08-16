@@ -15,9 +15,11 @@ from apps.kraken.engine import __version__
 
 DEFAULT_HOME = os.path.join(os.path.expanduser("~"), ".kraken")
 
-DEFAULT_MODEL = "qwen2.5-coder:14b"
+DEFAULT_MODEL = "coding"
 
 DEFAULT_PROVIDERS = {
+    # Nautilus from-scratch local models (no network, no API keys)
+    "nautilus": {"label": "Nautilus (local)", "kind": "nautilus"},
     # Local servers
     "ollama": {"label": "Ollama", "base_url": "http://localhost:11434", "kind": "ollama"},
     "lmstudio": {"label": "LM Studio", "base_url": "http://localhost:1234/v1", "kind": "openai"},
@@ -32,6 +34,13 @@ DEFAULT_PROVIDERS = {
     "mistral": {"label": "Mistral", "base_url": "https://api.mistral.ai/v1", "kind": "openai"},
     "deepseek": {"label": "DeepSeek", "base_url": "https://api.deepseek.com/v1", "kind": "openai"},
     "together": {"label": "Together", "base_url": "https://api.together.xyz/v1", "kind": "openai"},
+}
+
+# Nautilus from-scratch models and what they do.
+NAUTILUS_MODELS = {
+    "coding": "Coding — code + project brain",
+    "writing": "Writing — READMEs & prose",
+    "pentest": "Pentest — security assistant",
 }
 
 # Providers that talk to the cloud and want an API key.
@@ -57,11 +66,11 @@ DEFAULT_TOOLS = ("file_read", "file_write", "terminal_exec")
 def _default_config() -> dict:
     return {
     "version": __version__,
-    "provider": "ollama",
-    "base_url": DEFAULT_PROVIDERS["ollama"]["base_url"],
+    "provider": "nautilus",
+    "base_url": "",
     "model": DEFAULT_MODEL,
     "api_key": "",
-    "temperature": 0.2,
+    "temperature": 0.6,
         "max_tokens": 4096,
         "num_ctx": 8192,
         "auto_approve": False,

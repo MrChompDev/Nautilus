@@ -19,6 +19,7 @@ from apps.Abyssal.src.ui.terminal import AbyssalTerminal
 from apps.Abyssal.src.views.activity_bar import ActivityBar
 from apps.Abyssal.src.views.breadcrumb import BreadcrumbBar
 from apps.Abyssal.src.views.find_replace import FindReplaceBar
+from apps.Abyssal.src.views.kraken_chat import KrakenChatPanel
 from apps.Abyssal.src.views.palette import CommandPalette
 from apps.Abyssal.src.views.sidebar import Sidebar
 from apps.Abyssal.src.views.status_bar import StatusBar
@@ -86,6 +87,7 @@ class AbyssalMainWindow(QMainWindow):
         view_menu = menubar.addMenu("&View")
         view_menu.addAction("Toggle Sidebar", self._toggle_sidebar, "Ctrl+B")
         view_menu.addAction("Toggle Terminal", self._toggle_terminal, "Ctrl+`")
+        view_menu.addAction("Toggle Kraken Chat", self._toggle_chat, "Ctrl+Shift+C")
         view_menu.addSeparator()
         view_menu.addAction("Toggle Word Wrap", self._toggle_word_wrap)
 
@@ -121,6 +123,7 @@ class AbyssalMainWindow(QMainWindow):
             "<li>F5 - Run File</li>"
             "<li>Ctrl+B - Toggle Sidebar</li>"
             "<li>Ctrl+` - Toggle Terminal</li>"
+            "<li>Ctrl+Shift+C - Toggle Kraken Chat</li>"
             "</ul>"
         )
 
@@ -195,6 +198,12 @@ class AbyssalMainWindow(QMainWindow):
 
         outer.addWidget(right_panel, 1)
 
+        self.kraken_chat = KrakenChatPanel()
+        self.kraken_chat.set_workspace(self._workspace_root())
+        self.kraken_chat.hide()
+        self.kraken_chat.close_requested.connect(self._toggle_chat)
+        outer.addWidget(self.kraken_chat)
+
         main_layout.addLayout(outer, 1)
 
         self.palette = CommandPalette()
@@ -219,6 +228,7 @@ class AbyssalMainWindow(QMainWindow):
             "  Ctrl+P          Quick Open File\n"
             "  Ctrl+B          Toggle Sidebar\n"
             "  Ctrl+`          Toggle Terminal\n"
+            "  Ctrl+Shift+C    Toggle Kraken Chat\n"
             "  Ctrl+N          New File\n"
             "  Ctrl+O          Open File\n"
             "  Ctrl+S          Save\n"
@@ -275,6 +285,9 @@ class AbyssalMainWindow(QMainWindow):
             editor = self._editors[name]
             self.active_editor = editor
             self._current_file = name
+
+            if name != "__default__":
+                self.kraken_chat.set_workspace(self._workspace_root())
 
             layout = self.editor_container.layout()
             while layout.count():
@@ -406,6 +419,7 @@ class AbyssalMainWindow(QMainWindow):
             "Ctrl+R": self._run_file,
             "Ctrl+B": self._toggle_sidebar,
             "Ctrl+`": self._toggle_terminal,
+            "Ctrl+Shift+C": self._toggle_chat,
             "Ctrl+F": self._show_find,
             "Ctrl+H": self._show_find_replace,
             "Ctrl+W": self._close_current_tab,
@@ -429,6 +443,22 @@ class AbyssalMainWindow(QMainWindow):
         else:
             self.terminal.show()
             self.terminal.setFocus()
+
+    def _workspace_root(self) -> str:
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        if self._current_file and self._current_file != "__default__":
+            folder = os.path.dirname(self._current_file)
+            if folder and os.path.isdir(folder):
+                return folder
+        return project_root
+
+    def _toggle_chat(self):
+        if self.kraken_chat.isVisible():
+            self.kraken_chat.hide()
+        else:
+            self.kraken_chat.set_workspace(self._workspace_root())
+            self.kraken_chat.show()
+            self.kraken_chat.focus_input()
 
     def _show_palette(self):
         self.palette.show()
@@ -503,6 +533,7 @@ class AbyssalMainWindow(QMainWindow):
             ("Run File", "F5"),
             ("Toggle Sidebar", "Ctrl+B"),
             ("Toggle Terminal", "Ctrl+`"),
+            ("Toggle Kraken Chat", "Ctrl+Shift+C"),
             ("Toggle Word Wrap", ""),
             ("Find", "Ctrl+F"),
             ("Find and Replace", "Ctrl+H"),
@@ -525,6 +556,7 @@ class AbyssalMainWindow(QMainWindow):
             "Run File": self._run_file,
             "Toggle Sidebar": self._toggle_sidebar,
             "Toggle Terminal": self._toggle_terminal,
+            "Toggle Kraken Chat": self._toggle_chat,
             "Toggle Word Wrap": self._toggle_word_wrap,
             "Find": self._show_find,
             "Find and Replace": self._show_find_replace,
@@ -541,4 +573,8 @@ class AbyssalMainWindow(QMainWindow):
     def closeEvent(self, event):
         if hasattr(self, "terminal") and hasattr(self.terminal, "cleanup"):
             self.terminal.cleanup()
+        if hasattr(self, "kraken_chat") and hasattr(self.kraken_chat, "_worker"):
+            worker = self.kraken_chat._worker
+            if worker is not None and worker.isRunning():
+                worker.wait(1000)
         super().closeEvent(event)

@@ -67,6 +67,7 @@ STACK = {
 ROOT_LAYOUT = {
     "core/": "System shell, shared runtime, security toolkit (see CORE_MODULES)",
     "apps/": "11 standalone apps, one folder each (see APPS)",
+    "models/": "Custom from-scratch models (see MODELS): lm/ (LLM framework + coding/writing/pentest) + imggen/ (image+video diffusion) + trained/ (weights) + data/ (corpora)",
     "agents/": "Example Markdown agent specs for Kraken (DatabaseArchitect.md)",
     "assets/": "Generated logos (assets/logos/) + wallpaper.png (no binary assets committed)",
     "data/": "Runtime state: accounts.json, integrity_baseline.json, security_log.jsonl",
@@ -120,7 +121,7 @@ APP_MANIFEST = [
 # Each entry: {file, purpose, classes: {name: what}, funcs: [..], notes}
 CORE_MODULES = [
     {
-        "file": "core/main.py", "lines": 1139,
+        "file": "core/main.py", "lines": 1233,
         "purpose": "Desktop shell entry: login -> NautilusShell (floating glass top bar, wallpaper, glass dock, launchpad, tray, shortcuts).",
         "classes": {
             "TopBar": "Floating 40px glass pill bar (full width, side gaps): logo, running-app indicators, CPU/RAM metrics pill, avatar, clock, fullscreen + shutdown buttons. QTimers: 1s clock / 3s metrics / 2s app poll. Drag-to-move.",
@@ -131,7 +132,7 @@ CORE_MODULES = [
             "NautilusShell": "Frameless maximized shell; owns single AppLauncher; shortcuts (F11, Ctrl+Alt+F/Q/Esc, Meta/Ctrl+Alt+G launchpad); tray menu; launcher on_launch/on_exit hooks; hide-to-tray on close.",
             "SearchOverlay": "Ctrl+Space / Ctrl+Alt+Space global search (apps + local files + web handoff via Surfline).",
         },
-        "funcs": ["main() — boot: log_startup -> QApplication -> palette/stylesheet -> SIGINT/TERM handlers -> ensure_all_logos() -> LoginDialog (fullscreen) -> NautilusShell -> app.exec()"],
+        "funcs": ["main() — boot: log_startup -> QApplication -> palette/stylesheet -> SIGINT/TERM handlers -> ensure_all_logos() -> LoginDialog (fullscreen) -> NautilusShell -> app.exec() (NO auto ComfyUI control-icon regen at boot — would enqueue ~62 jobs; icons generated via core.ai_assets --controls)"],
         "notes": "PROJECT_ROOT inserted into sys.path before core imports. setup_qt_environment() called before any PySide6 import. Lambda default-arg binding used for closures. Glass surfaces: translucent slate via hex_to_rgba(COLORS['slate_navy'], alpha) so the painted wallpaper glows through; PANEL_RADIUS 14 / DOCK_RADIUS 18. Ambient animation: 40ms QTimer -> wallpapers.AmbientLayer.advance(0.04), recreated when theme OR size changes; base pixmap scaled with IgnoreAspectRatio."
     },
     {
@@ -213,8 +214,8 @@ CORE_MODULES = [
         "notes": "Config at ~/.nautilus/wallpaper.json (atomic tmp+os.replace). THEMES: abyss, aurora, tide, storm, kelp, stars. Resolution order = icons.py/ai_assets.py convention; ai_assets overwrites the same output paths. Consumed by core/main.py (DesktopWallpaper), core/auth.py (LoginDialog) and apps/anchor/main.py (WallpaperPanel).",
     },
     {
-        "file": "core/ai_assets.py", "lines": 355,
-        "purpose": "Opt-in AI asset generator: wallpapers + app icons via a local ComfyUI server (FLUX.2-klein 4B distilled, GGUF Q4_K_M + qwen_3_4b text encoder + flux2-vae). Pure stdlib HTTP. Writes the SAME output paths as wallpaper.py/icons.py.",
+        "file": "core/ai_assets.py", "lines": 683,
+        "purpose": "Opt-in AI asset generator: wallpapers + app icons + UI control icons via a local ComfyUI server (FLUX.2-klein 4B distilled, GGUF Q4_K_M + qwen_3_4b text encoder + flux2-vae). Pure stdlib HTTP. Writes the SAME output paths as wallpaper.py/icons.py.",
         "classes": {},
         "funcs": [
             "list_models() -> list[str] (UnetLoaderGGUF combo via /object_info)",
@@ -225,9 +226,22 @@ CORE_MODULES = [
             "generate_wallpaper(theme,width,height,model,prompt,force,seed) -> path (gen <=1.4MP, upscaled to 1920x1080)",
             "generate_wallpapers(model,force,seed) -> list[path] — all 6 themes from WALLPAPER_PROMPTS",
             "generate_icons(model,force,seed) -> list[path] (512px gen -> 128px cache)",
+            "generate_controls(model,force,seed) -> list[path] (256px gen -> 64px cache; 62 glyphs in CONTROL_PROMPTS, transparent-background flat glyph style)",
             "analyze_image(path) -> dict (mean luma etc.) / check_icons() -> report / generate_icons_where(fix=True) — quality audit",
         ],
-        "notes": "CLI: python3 -m core.ai_assets --wallpaper [THEME] | --wallpapers | --icons | --check [--fix] [-W -H -m --prompt --seed -f -y]. Env: NAUTILUS_COMFY_URL (default http://localhost:8188), NAUTILUS_AI_MODEL. Distilled klein sampling: euler / 4 steps / CFG 1.0 / ConditioningZeroOut (official template). Icons: 18 prompts in ICON_PROMPTS with shared STYLE prefix (slate-navy tile #0E2238 + seafoam border for visibility on dark UI); QImage smooth-scale, no QApplication needed. --check audits luma (mean < 28 flagged too dark) so icon quality is verifiable without visual inspection. icons.py get_logo() prefers assets/logos/*.png on disk, so AI icons are picked up at runtime automatically. ComfyUI lives at ~/comfyui (venv .venv, CPU torch 2.11, ComfyUI-GGUF node); launch with --cpu.",
+        "notes": "CLI: python3 -m core.ai_assets --wallpaper [THEME] | --wallpapers | --icons | --controls | --check [--fix] [-W -H -m --prompt --seed -f -y]. Env: NAUTILUS_COMFY_URL (default http://localhost:8188), NAUTILUS_AI_MODEL. Distilled klein sampling: euler / 4 steps / CFG 1.0 / ConditioningZeroOut (official template). Icons: 18 prompts in ICON_PROMPTS with shared STYLE prefix (slate-navy tile #0E2238 + seafoam border for visibility on dark UI); QImage smooth-scale, no QApplication needed. --check audits luma (mean < 28 flagged too dark) so icon quality is verifiable without visual inspection. icons.py get_logo() prefers assets/logos/*.png on disk, so AI icons are picked up at runtime automatically. Control icons -> assets/controls/<name>.png consumed by core/controls.py. ComfyUI lives at ~/comfyui (venv .venv, CPU torch 2.11, ComfyUI-GGUF node); launch with --cpu.",
+    },
+    {
+        "file": "core/controls.py", "lines": 116,
+        "purpose": "Uniform UI control-icon access: loads AI-generated glyphs from assets/controls/<name>.png with a QStyle standard-icon fallback so nothing crashes if an asset is missing.",
+        "classes": {},
+        "funcs": [
+            "control_path(name) -> path|None",
+            "control_pixmap(name,size=24) -> QPixmap (AI PNG scaled smooth, else QStyle fallback)",
+            "control_icon(name) -> QIcon (same fallback)",
+            "ensure_all_controls() -> list[path] (generate missing via ai_assets.generate_controls; NOT auto-run at shell boot — would enqueue ~62 ComfyUI jobs)",
+        ],
+        "notes": "_FALLBACKS maps control names -> QStyle.StandardPixmap (play/pause/stop/refresh/close/arrows/search/folder/trash/info/warning/error/home/settings/...). Used by core/main.py top-bar fullscreen + shutdown buttons and apps/Abyssal Kraken chat close/send buttons.",
     },
     {
         "file": "core/security/cli.py", "lines": 164,
@@ -294,13 +308,14 @@ CORE_MODULES = [
 
 APPS = {
     "abyssal": {
-        "desc": "Code editor / IDE. Entry apps/Abyssal/main.py -> AbyssalMainWindow (application.py, 557 ln).",
+        "desc": "Code editor / IDE. Entry apps/Abyssal/main.py -> AbyssalMainWindow (application.py, 579 ln).",
         "structure": "Two generations coexist: (1) LIVE app = direct Qt widget composition in application.py; (2) DOCUMENTED service architecture (src/core + src/services + src/models + standalone views) largely NOT wired in.",
         "live_classes": {
             "AbyssalMainWindow": "Menu bar (File/Edit/View/Go/Run/Help), ActivityBar | Sidebar | right panel (TabBar, BreadcrumbBar, FindReplaceBar, QSplitter(editor|terminal)), StatusBar, CommandPalette popup, ~15 QShortcuts. _connect_signals wires ActivityBar/Sidebar/TabBar/Palette/FindReplaceBar.",
             "AbyssalEditor": "src/ui/editor.py — QPlainTextEdit + LineNumberArea gutter, active-line highlight, bracket matching, find/replace, language detection. Signals: cursor_moved, language_changed, modification_changed.",
             "AbyssalTerminal": "src/ui/terminal.py — QProcess interactive shell, prompt, command history.",
             "AbyssalFileTree": "src/ui/file_tree.py — QFileSystemModel tree (NOT wired in).",
+            "KrakenChatPanel": "src/views/kraken_chat.py — right-side streaming AI chat dock (Ctrl+Shift+C, View menu): QThread _KrakenWorker builds ChatClient(provider='nautilus') INSIDE the worker, chunk/done/failed/status signals (thread-safe: worker only emits, GUI only updates), history capped at 12 msgs, max_tokens 256, workspace = folder of active file via _workspace_root() (brain context feeds the coding model), model fallback coding -> writing -> pentest, close via icon button / toggle; closeEvent waits for worker. Loaded lazily on first open; wired in application.py (View menu, outer right layout, About + welcome text).",
         },
         "engine": {
             "AbyssalHighlighter": "src/engines/highlighter.py — QSyntaxHighlighter; LANG_EXT_MAP ~35 ext; RULES for python, js/ts, c, cpp, html/xml, css, bash, json, yaml, markdown; detect_language(path); LANG_NAMES. ONLY engine wired into the live app.",
@@ -425,13 +440,15 @@ APPS = {
         ],
     },
     "kraken": {
-        "desc": "Local-first agentic AI engine + multi-agent workforce. Two surfaces share one engine package: CLI (kraken.py -> cli.py, 899 ln) and PySide6 desktop (main.py -> ui/, engine events marshalled via polled queue).",
+        "desc": "Local-first agentic AI engine + multi-agent workforce. Two surfaces share one engine package: CLI (kraken.py -> cli.py, 948 ln) and PySide6 desktop (main.py -> ui/, engine events marshalled via polled queue). Bundles a `nautilus` provider that runs the in-repo custom trained models (models/lm + models/imggen).",
         "ram": 120,
         "structure": {
-            "engine/config.py": "KrakenConfig dataclass, JSON at ~/.kraken/config.json; DEFAULT_PROVIDERS presets (ollama/lmstudio/vllm/llamacpp + 8 cloud: openai/anthropic/gemini/groq/openrouter/mistral/deepseek/together); DEFAULT_MODEL qwen2.5-coder:14b",
+            "engine/config.py": "KrakenConfig dataclass, JSON at ~/.kraken/config.json; DEFAULT_PROVIDERS presets (nautilus FIRST = custom local models, then ollama/lmstudio/vllm/llamacpp + 8 cloud: openai/anthropic/gemini/groq/openrouter/mistral/deepseek/together); DEFAULT_MODEL qwen2.5-coder:14b",
             "engine/spec.py": "Markdown Agent Builder: frontmatter (name/model/tools/workforce_roles/default_mode/num_ctx/system_prompt) + body -> AgentSpec. KNOWN_TOOL_NAMES (file_read/write/delete/list, terminal_exec), KNOWN_ROLES (planner/exec/qa/worker). SpecError.",
             "engine/agent_store.py": "AgentStore catalog of .md agents in ~/.kraken/agents/; CRUD, import, resolve, role_spec(role).",
-            "engine/providers.py": "ChatClient streaming over plain HTTP (OpenAI-compatible SSE, Ollama /api/chat native, Anthropic /v1/messages native). ProviderError with actionable messages. stats {tokens, streams}. list_ollama_models, ping_provider.",
+            "engine/providers.py": "ChatClient streaming over plain HTTP (OpenAI-compatible SSE, Ollama /api/chat native, Anthropic /v1/messages native). nautilus provider delegates to engine/local.py. ProviderError with actionable messages. stats {tokens, streams}. list_ollama_models, ping_provider.",
+            "engine/local.py": "nautilus provider bridge: loads models/lm engine (BytePairTokenizer + Model) + brain context; ChatClient.local(client...) returns a streamed chat via generator; model fallback chain coding -> writing -> pentest (first available).",
+            "engine/brain.py": "Project 'brain' persistent file DB: scan() hashes files (sha1, worker ThreadPool) -> SQLite (~/.nautilus/brain.db, one table per workspace); context(path, n=5, cap=1400) -> top-k by keyword overlap, returns ### FILENAME\n text blobs; status()/reset_workspace(). CLI: kraken brain scan|status|context --workspace <dir>.",
             "engine/discovery.py": "find_local_models() (Ollama server+disk, LM Studio GGUF caches, llama.cpp dirs), recommend_backend(), list_api_models(), detect_provider_health().",
             "engine/keys.py": "Key resolution: ~/.kraken/keys.json > ~/.env > env vars. save_keys 0600, never logged. ENV_VARS map.",
             "engine/memory.py": "MemoryStore SQLite (~/.kraken/memory.db): remember/recall with token-based pseudo-embedding cosine, find_exact, bump_hit, stats, forget. Table memory(id,signature,embedding,fix,context,source,created_at,hits).",
@@ -439,7 +456,7 @@ APPS = {
             "engine/orchestrator.py": "Workforce ('Agent Mode'): Planner -> parallel exec agents -> QA/Review -> synthesized === KRAKEN WORKFORCE REPORT ===. max_parallel=3, SubTask/Workforce dataclasses, stop()",
             "engine/tools.py": "Tool registry: file_read (512KB cap), file_write, file_delete, file_list, terminal_exec (300s timeout). PermissionGate (auto_approve/allow_force/confirm_fn — FAIL-CLOSED: no approver wired -> deny), ToolContext (workspace + resolve_path SANDBOXED to workspace: absolute/../symlink escapes raise ToolError), TOOL_SCHEMA, _DANGER_PATTERNS (rm -rf /, fork bomb, mkfs, dd), ToolError/PermissionDenied.",
             "engine/logger.py": "Bridges to core.logger ('KRK') or stdlib fallback.",
-            "cli.py": "REPL (readline history, kraken> prompt, /slash commands), direct tasks, --agent-mode, subcommands: build, doctor, models, memory, config, agent (new/list/show/edit/remove/import/run), keys (list/show/add/set/remove), setup. _gate() approval prompts.",
+            "cli.py": "REPL (readline history, kraken> prompt, /slash commands), direct tasks, --agent-mode, subcommands: build, doctor, models, memory, config, agent (new/list/show/edit/remove/import/run), brain (scan/status/context --workspace <dir>), keys (list/show/add/set/remove), setup. _gate() approval prompts. cmd_models resolves available nautilus models from models/trained/*; provider default 'nautilus' when a model dir exists.",
             "ui/main_window.py": "KrakenWindow: chat panel + workforce tree + agent library manager; EngineWorker thread; events via queue.Queue drained by 120ms QTimer (no cross-thread Qt calls). Gate has no confirm_fn wired -> tools fail-closed until an approver is added.",
             "ui/chat_panel.py": "ChatPanel: streaming transcript + keyboard-first input, submitted signal.",
             "ui/workforce_view.py": "WorkforceTree QTreeWidget: per-agent status/tokens/event trail, STATUS_COLORS map.",
@@ -468,6 +485,37 @@ AGENTS = [
     {"file": "agents/DatabaseArchitect.md",
      "purpose": "Example Kraken agent spec (frontmatter + body). Also ships to <venv>/share/kraken/agents/ on install."},
 ]
+
+# ---------------------------------------------------------------------------
+# 8a. CUSTOM MODELS (models/) — trained from scratch, local-first
+# ---------------------------------------------------------------------------
+
+MODELS = {
+    "lm": {
+        "desc": "Custom decoder-only transformer LLM framework (pure NumPy). Four model ids trained from scratch: coding (with brain context), writing, pentest + tiny smoke artifacts. int8 quantized exports ~19-20MB (block_size 1024 so brain context fits).",
+        "files": {
+            "models/lm/bpe.py": "Byte-level BPE tokenizer, vectorized NumPy merge scoring, vocab 4096; save/load merges JSON + token jsonl.",
+            "models/lm/model.py": "Transformer: n_embd 384, n_layer 6, n_head 6, block_size 1024; token+pos embeddings, MHA, MLP+GELU, LayerNorm, final LM head; export_int8 -> shared export.py struct.",
+            "models/lm/train.py": "train.py --id <coding|writing|pentest> --data models/data/<id> --out models/trained [--smoke] [--target-tokens N] [--steps]. Builds BPE on the corpus, then trains. Smoke = tiny run for CI.",
+            "models/lm/engine.py": "NumPy inference engine: BytePairTokenizer + Model, encode/decode, generate stream (top-k, temperature), load_struct dequant. Matmul via (float32 upcast of int8 @ int8) on 16 cores.",
+            "models/lm/cli.py": "cli.py --model <id> --prompt ... — chat directly against a trained model.",
+            "models/lm/export.py": "Shared int8 exporter: quantize_rows / entry_to_struct / save_weights / load_struct (loads npz with allow_pickle=False).",
+            "models/lm/make_corpora.py": "Corpus builders: make_corpora.py --id coding|writing|pentest --data models/data/<id> (scrapes nothing; deterministic sample text).",
+        },
+        "notes": "Chat format ### system / ### user / ### assistant. Brain context injected only for coding model (k=5 files, cap 1400 chars). Writing/pentest smoke artifacts live in models/trained/writing (to be replaced by full training). Coding full training: BPE ~47min, then ~2.5M tokens at ~314-500 tok/s.",
+    },
+    "imggen": {
+        "desc": "Image + video generation model (ImageGen / small diffusion, from scratch, int8 0.2MB smoke / ~5MB full). Trained on synthetic gradient art; engine is pure NumPy (no torch at inference).",
+        "files": {
+            "models/imggen/data.py": "Synthetic dataset: BOW style vector (64-d, seeded phrases) + target images (32x32 gradient art) -> batches.",
+            "models/imggen/model.py": "UNet-ish denoiser + FiLM (style) conditioning; export_int8 via shared export.py.",
+            "models/imggen/train.py": "train.py --steps --batch --out — full run 2500 steps / batch 64 (~23 img/s on CPU).",
+            "models/imggen/engine.py": "NumPy diffusion engine: generate(prompt,size,seed,steps), frames(), video() (ffmpeg MP4), upscale() lanczos-ish, save_png. No torch import.",
+            "models/imggen/generate.py": "CLI: python3 models/imggen/generate.py \"abyss waves\" -o art.png --size 512 | --video clip.mp4 --seconds 4. Inference is slow on CPU (~1.2s/step at 32x32 under load) -> steps default 50.",
+        },
+        "notes": "cosine schedule computed inline (no torch). Output arrays float32 -> uint8 PNG via save_png. Video uses ffmpeg pipe (must be on PATH, 7.1.3).",
+    },
+}
 
 # ---------------------------------------------------------------------------
 # 8. DESIGN PATTERNS & CONVENTIONS
@@ -499,6 +547,7 @@ DEV_COMMANDS = [
     {"cmd": "py -3.13 apps/kraken/main.py", "desc": "Run the Kraken AI desktop app"},
     {"cmd": "py -3.13 kraken.py --agent-mode \"task\"", "desc": "Kraken CLI workforce mode"},
     {"cmd": "py -3.13 kraken.py build --spec agents/DatabaseArchitect.md", "desc": "Kraken CLI: build an agent spec"},
+    {"cmd": "py -3.13 kraken.py brain scan|status|context --workspace <dir>", "desc": "Kraken CLI: project-brain file DB"},
     {"cmd": "py -3.13 tests/test_kraken_engine.py", "desc": "Kraken engine unit tests (no backend needed)"},
     {"cmd": "pip install .", "desc": "Install kraken CLI on PATH (no mandatory deps)"},
     {"cmd": "pip install \".[gui]\"", "desc": "Install kraken-gui too (adds PySide6)"},
@@ -506,6 +555,11 @@ DEV_COMMANDS = [
     {"cmd": "py -3.13 tests/smoke_test.py [--duration 4] [--app cinema]", "desc": "Offscreen smoke-test all apps"},
     {"cmd": "ruff check .", "desc": "Lint (ruff.toml, py313 target)"},
     {"cmd": "py -3.13 -m core.security.cli --help", "desc": "Security toolkit CLI"},
+    {"cmd": "py -3.13 models/lm/train.py --id coding --data models/data/coding --out models/trained [--smoke] [--target-tokens N]", "desc": "Train a custom LM (BPE + transformer); smoke for CI"},
+    {"cmd": "py -3.13 models/lm/cli.py --model writing --prompt \"hello\"", "desc": "Chat with a trained LM directly"},
+    {"cmd": "py -3.13 models/imggen/train.py --steps 2500 --batch 64", "desc": "Train the image+video diffusion model"},
+    {"cmd": "py -3.13 models/imggen/generate.py \"abyss waves\" -o art.png --size 512", "desc": "Generate art / --video clip.mp4 with imggen"},
+    {"cmd": "py -3.13 -m core.ai_assets --wallpapers|--icons|--controls", "desc": "Regenerate AI wallpapers / app icons / UI control icons via ComfyUI"},
 ]
 
 # ---------------------------------------------------------------------------
@@ -550,6 +604,18 @@ def find(name: str) -> list[str]:
                 for v in sub:
                     if isinstance(v, str) and name in v.lower():
                         hits.append(f"apps/{aid} {section}: {v[:140]}")
+    for mid, minfo in MODELS.items():
+        if name in mid:
+            hits.append(f"models/{mid} — {minfo['desc']}")
+        for section, sub in minfo.items():
+            if section == "files" and isinstance(sub, dict):
+                for k, v in sub.items():
+                    if name in k.lower():
+                        hits.append(f"models/{mid} files/{k}")
+                    if isinstance(v, str) and name in v.lower():
+                        hits.append(f"models/{mid} files/{k}: {v[:140]}")
+            elif isinstance(sub, str) and name in sub.lower():
+                hits.append(f"models/{mid} {section}: {sub[:140]}")
     return hits or [f"No hits for {name!r}"]
 
 
@@ -589,6 +655,7 @@ def dump(app_id: str | None = None) -> str:
         "core": CORE_MODULES,
         "tests": TESTS,
         "agents": AGENTS,
+        "models": MODELS,
     }
     return json.dumps(payload, indent=2, default=str)
 

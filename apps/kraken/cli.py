@@ -92,6 +92,7 @@ def build_client(cfg: KrakenConfig, spec: AgentSpec | None = None) -> ChatClient
         num_ctx=num_ctx,
         api_key=api_key,
         timeout=cfg.get("timeout", 300),
+        workspace=cfg.workspace,
     )
 
 
@@ -225,7 +226,19 @@ def cmd_build(cfg: KrakenConfig, spec_ref: str, use_color: bool = True):
 
 
 def cmd_models(cfg: KrakenConfig, use_color: bool = True):
-    print("Local models (downloaded / reachable):")
+    from apps.kraken.engine import local
+    from apps.kraken.engine.config import NAUTILUS_MODELS
+
+    naut = local.list_local_models()
+    if naut:
+        print("Nautilus from-scratch models (local, offline):")
+        for m in naut:
+            label = NAUTILUS_MODELS.get(m["id"], m["id"])
+            print(f"  {'nautilus':<10} {m['id']:<8} ~{m['size_mb']}MB  {label}")
+        print("\nLocal servers (downloaded / reachable):")
+    else:
+        print("Nautilus from-scratch models: (none trained yet) — see models/lm/train.py")
+        print("\nLocal servers (downloaded / reachable):")
     local = find_local_models(cfg.base_url)
     by_provider: dict[str, list[str]] = {}
     for m in local:
@@ -319,6 +332,33 @@ def cmd_setup(cfg: KrakenConfig, use_color: bool = True):
     print(_c("dim", "\n  change anything with:  kraken config provider|base_url|model <value>", use_color))
 
 
+def cmd_brain(cfg: KrakenConfig, args: list[str], use_color: bool = True):
+    from apps.kraken.engine.brain import ProjectBrain
+
+    sub = args[0].lower() if args else "scan"
+    path = args[1] if len(args) > 1 else cfg.workspace
+    brain = ProjectBrain(path)
+    if sub == "status":
+        st = brain.status()
+        print(f"  workspace : {st['workspace']}")
+        print(f"  files     : {st['files']}")
+        langs = ", ".join(f"{k}×{v}" for k, v in sorted(st['languages'].items(), key=lambda x: -x[1])[:10])
+        print(f"  languages : {langs or '—'}")
+        print(f"  db        : {st['db']}")
+        return
+    if sub == "context":
+        query = args[1] if len(args) > 1 else ""
+        if not query:
+            print("  usage: kraken brain context \"question\" [path]")
+            return
+        print(brain.context(query, k=6))
+        return
+    print(f"  indexing {path} …")
+    res = brain.scan()
+    print(f"  done: +{res['added']} new, {res['updated']} updated, {res['removed']} removed, "
+          f"{res['unchanged']} unchanged, {res['total']} files in brain")
+
+
 def cmd_memory(cfg: KrakenConfig, use_color: bool = True):
     mem = build_memory(cfg)
     stats = mem.stats()
@@ -327,6 +367,7 @@ def cmd_memory(cfg: KrakenConfig, use_color: bool = True):
     print(f"  entries : {stats['entries']}")
     for item in stats.get("top_resolved", []):
         print(f"  - {item['signature'][:70]}  (hits: {item['hits']})")
+
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -706,13 +747,15 @@ def handle_slash(cfg: KrakenConfig, line: str, memory: MemoryStore, client: Chat
 #  ARG PARSING
 # ═══════════════════════════════════════════════════════════════
 
-_KNOWN_COMMANDS = ("build", "doctor", "models", "memory", "config", "agent", "keys", "setup")
+_KNOWN_COMMANDS = ("build", "doctor", "models", "memory", "config", "agent", "keys", "setup", "brain")
 
 _SINGLETON_COMMANDS = ("doctor", "models", "memory", "setup")
 
 _AGENT_SUBCOMMANDS = ("new", "list", "show", "info", "edit", "remove", "rm", "import", "run")
 
 _KEYS_SUBCOMMANDS = ("list", "show", "add", "set", "remove", "rm")
+
+_BRAIN_SUBCOMMANDS = ("scan", "status", "context")
 
 
 def _first_positional(argv_list: list[str]) -> str | None:
@@ -767,6 +810,8 @@ def _dispatch(tokens: list[str]) -> tuple[str | None, list[str]]:
         return "agent", tokens[1:] if len(tokens) > 1 else []
     if head == "keys" and (len(tokens) == 1 or tokens[1].lower() in _KEYS_SUBCOMMANDS):
         return "keys", tokens[1:] if len(tokens) > 1 else []
+    if head == "brain" and (len(tokens) == 1 or tokens[1].lower() in _BRAIN_SUBCOMMANDS):
+        return "brain", tokens[1:] if len(tokens) > 1 else []
     return None, tokens
 
 
@@ -819,7 +864,8 @@ def main(argv: list[str] | None = None):
         meta = DEFAULT_PROVIDERS.get(args.provider)
         if meta:
             cfg.set("provider", args.provider)
-            cfg.set("base_url", meta["base_url"])
+            if "base_url" in meta:
+                cfg.set("base_url", meta["base_url"])
         else:
             cfg.set("provider", args.provider)
     if args.model:
@@ -860,6 +906,9 @@ def main(argv: list[str] | None = None):
         return 0
     if command == "setup":
         cmd_setup(cfg, use_color)
+        return 0
+    if command == "brain":
+        cmd_brain(cfg, rest, use_color)
         return 0
 
     task = " ".join(rest).strip()

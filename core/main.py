@@ -54,6 +54,7 @@ from PySide6.QtWidgets import (
 from core import search as search_index
 from core import wallpapers
 from core.auth import LoginDialog, get_avatar_initials
+from core.controls import control_pixmap
 from core.icons import ensure_all_logos, get_logo, get_pixmap
 from core.launcher import APP_MANIFEST, AppLauncher
 from core.logger import get_logger, log_perf, log_shutdown, log_startup
@@ -197,33 +198,34 @@ class TopBar(QFrame):
         layout.addWidget(self._clock)
 
         # ── Fullscreen toggle ──
-        fs_btn = QPushButton("\u29C9")
+        fs_btn = QPushButton()
         fs_btn.setFixedSize(30, 28)
+        fs_btn.setIcon(control_pixmap("expand", 18))
+        fs_btn.setIconSize(QSize(18, 18))
         fs_btn.setToolTip("Toggle Fullscreen (F11)")
         fs_btn.setStyleSheet(f"""
             QPushButton {{
-                background: transparent; color: {COLORS['text_secondary']};
-                border: 1px solid transparent; border-radius: 8px; font-size: 13px;
+                background: transparent; border: 1px solid transparent; border-radius: 8px;
             }}
             QPushButton:hover {{
-                background: {_glass_dark(160)}; color: {COLORS['seafoam']};
-                border: 1px solid {_edge()};
+                background: {_glass_dark(160)}; border: 1px solid {_edge()};
             }}
         """)
         fs_btn.clicked.connect(self._on_fs_clicked)
         layout.addWidget(fs_btn)
 
         # ── Shutdown ──
-        shutdown_btn = QPushButton("\u23FB")
+        shutdown_btn = QPushButton()
         shutdown_btn.setFixedSize(30, 28)
+        shutdown_btn.setIcon(control_pixmap("power", 18))
+        shutdown_btn.setIconSize(QSize(18, 18))
         shutdown_btn.setToolTip("Shutdown Nautilus")
         shutdown_btn.setStyleSheet(f"""
             QPushButton {{
-                background: transparent; color: {COLORS['coral']};
-                border: 1px solid transparent; border-radius: 8px; font-size: 13px;
+                background: transparent; border: 1px solid transparent; border-radius: 8px;
             }}
             QPushButton:hover {{
-                background: {hex_to_rgba(COLORS['coral'], 190)}; color: {COLORS['void_black']};
+                background: {hex_to_rgba(COLORS['coral'], 190)}; border: 1px solid {_edge()};
             }}
         """)
         shutdown_btn.clicked.connect(self._on_shutdown)
@@ -1078,7 +1080,7 @@ class NautilusShell(QMainWindow):
             self._tray = self._build_tray()
         else:
             self._tray = None
-            self._log.warn("System tray not available")
+            self._log.warning("System tray not available")
 
     def _build_tray(self) -> QSystemTrayIcon:
         tray = QSystemTrayIcon(self)

@@ -47,6 +47,7 @@ class ChatClient:
         timeout: int = TIMEOUT,
         on_chunk: Callable[[str], None] | None = None,
         on_status: Callable[[str], None] | None = None,
+        workspace: str | None = None,
     ):
         self.provider = (provider or "ollama").lower()
         meta = DEFAULT_PROVIDERS.get(self.provider, {"kind": "openai"})
@@ -62,6 +63,7 @@ class ChatClient:
         self._on_status = on_status
         self._lock = threading.RLock()
         self.stats = {"tokens": 0, "streams": 0}
+        self.workspace = workspace
 
     # ── Endpoint helpers ───────────────────────────────────────
     def _chat_url(self) -> str:
@@ -124,6 +126,9 @@ class ChatClient:
 
     def stream(self, messages: list[dict]) -> Iterator[str]:
         """Yield text deltas as they arrive from the backend."""
+        if self.kind == "nautilus":
+            yield from self._stream_local(messages)
+            return
         url = self._chat_url()
         payload = self._payload(messages)
         data = json.dumps(payload).encode("utf-8")
@@ -200,6 +205,37 @@ class ChatClient:
             ) from e
         except (ValueError, KeyError) as e:
             raise ProviderError(f"Malformed response from {self.provider}: {e}") from e
+
+    # ── Local Nautilus models ──────────────────────────────────
+    def _stream_local(self, messages: list[dict]) -> Iterator[str]:
+        from apps.kraken.engine import local
+
+        if not local.is_available(self.model):
+            raise ProviderError(
+                f"local model {self.model!r} is not trained yet — run "
+                f"`python3 models/lm/train.py --id {self.model} --data models/data/{self.model}` "
+                f"(see models/lm/train.py)"
+            )
+        if self._on_status:
+            self._on_status(f"local · {self.model}")
+        try:
+                text = "".join(
+                local.local_stream(
+                    self.model,
+                    messages,
+                    temperature=self.temperature,
+                    max_new_tokens=self.max_tokens,
+                    top_k=40,
+                    on_chunk=self._on_chunk,
+                    workspace=self.workspace,
+                )
+            )
+        except FileNotFoundError as e:
+            raise ProviderError(str(e)) from e
+        with self._lock:
+            self.stats["streams"] += 1
+            self.stats["tokens"] += self._estimate_tokens(text)
+        yield text
 
     # ── Response parsing ───────────────────────────────────────
     @staticmethod
