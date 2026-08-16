@@ -580,6 +580,10 @@ def _b_which(s, argv, stdin):
     return "".join(found) + ("\n" if found else "")
 
 
+def _b_path(s, argv, stdin):
+    return s.env.get("PATH", "") + "\n"
+
+
 BUILTINS: dict[str, object] = {
     "pwd": _b_pwd, "cd": _b_cd, "ls": _b_ls,
     "ll": lambda s, a, i: _b_ls(s, ["ls", "-l"] + a[1:], i),
@@ -590,7 +594,7 @@ BUILTINS: dict[str, object] = {
     "history": _b_history, "exit": _b_exit, "clear": _b_clear,
     "cls": _b_clear, "help": _b_help, "grep": _b_grep,
     "head": _b_head, "tail": _b_tail, "which": _b_which,
-    "true": lambda s, a, i: "", "false": _b_false,
+    "path": _b_path, "true": lambda s, a, i: "", "false": _b_false,
     "harbor": _b_harbor,
 }
 

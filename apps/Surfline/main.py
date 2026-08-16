@@ -63,8 +63,8 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QApplication
 
 from apps.Surfline.src.icons import ensure_icons
-from apps.Surfline.src.theme import FONTS, get_stylesheet
 from apps.Surfline.src.window import SurflineWindow
+from core.theme import FONTS, get_global_stylesheet
 
 
 def main():
@@ -92,13 +92,13 @@ def main():
     app.setApplicationVersion("1.0.0")
     app.setOrganizationName("ChompOS")
 
-    app.setStyleSheet(get_stylesheet())
+    app.setStyleSheet(get_global_stylesheet())
 
     font = QFont()
     font.setFamilies([
         FONTS["ui"],
-        FONTS["fallback_mono"],
-        FONTS["fallback_mono2"],
+        FONTS["mono_fallback"],
+        FONTS["mono_fallback2"],
         "Arial"
     ])
     font.setPointSize(FONTS["size_md"])

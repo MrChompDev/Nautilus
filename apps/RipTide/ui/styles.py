@@ -1,32 +1,30 @@
 """Riptide Audio - PySide6 Theme & Colors"""
 from __future__ import annotations
 
-from apps.RipTide import config
-
-T = config.THEME_DARK
+from core.theme import COLORS
 
 
 class Colors:
-    BG_PRIMARY = T["bg_primary"]
-    BG_SECONDARY = T["bg_secondary"]
-    BG_TERTIARY = T["bg_tertiary"]
-    BG_CARD = T["bg_card"]
-    BG_HOVER = T["bg_hover"]
-    BG_ACTIVE = T["bg_active"]
-    ACCENT = T["accent"]
-    ACCENT_HOVER = T["accent_hover"]
-    ACCENT_DIM = T["accent_dim"]
-    TEXT_PRIMARY = T["text_primary"]
-    TEXT_SECONDARY = T["text_secondary"]
-    TEXT_MUTED = T["text_muted"]
-    BORDER = T["border"]
-    BORDER_LIGHT = T["border_light"]
-    DANGER = T["danger"]
-    SUCCESS = T["success"]
-    WARNING = T["warning"]
-    SPOTIFY = T["spotify"]
-    YOUTUBE = T["youtube"]
-    SOUNDCLOUD = T["soundcloud"]
+    BG_PRIMARY = COLORS["abyss_navy"]
+    BG_SECONDARY = COLORS["slate_navy"]
+    BG_TERTIARY = COLORS["deep_navy"]
+    BG_CARD = COLORS["void_black"]
+    BG_HOVER = COLORS["surface_hover"]
+    BG_ACTIVE = COLORS["surface_pressed"]
+    ACCENT = COLORS["seafoam"]
+    ACCENT_HOVER = COLORS["seafoam_dim"]
+    ACCENT_DIM = COLORS["seafoam_glow"]
+    TEXT_PRIMARY = COLORS["hd_white"]
+    TEXT_SECONDARY = COLORS["text_secondary"]
+    TEXT_MUTED = COLORS["text_muted"]
+    BORDER = COLORS["border"]
+    BORDER_LIGHT = COLORS["border_dim"]
+    DANGER = COLORS["coral"]
+    SUCCESS = COLORS["emerald"]
+    WARNING = COLORS["amber"]
+    SPOTIFY = COLORS["text_secondary"]  # placeholder - use Spotify logo color
+    YOUTUBE = COLORS["text_secondary"]  # placeholder - use YouTube logo color
+    SOUNDCLOUD = COLORS["text_secondary"]  # placeholder - use SoundCloud logo color
 
 
 def hex_to_rgb(hex_color: str) -> tuple:

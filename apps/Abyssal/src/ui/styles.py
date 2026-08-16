@@ -1,23 +1,26 @@
 
 
+from core.theme import COLORS
+
+
 class AbyssalTheme:
     BG = "#050D13"
     BG_DARK = "#030810"
     PANEL = "#0C1A2A"
     PANEL_ALT = "#0A1624"
     PANEL_HOVER = "#13253A"
-    PANEL_ACTIVE = "#0E2238"
-    ACCENT = "#00D4AA"
-    ACCENT_DIM = "#00A88A"
-    ACCENT_LIGHT = "#33FFD2"
-    CORAL = "#FF6B4A"
-    YELLOW = "#F0C040"
-    BLUE = "#4AA8FF"
-    PURPLE = "#B18AFF"
-    TEXT = "#D8E2EC"
-    TEXT_DIM = "#6A8EA8"
-    TEXT_MUTED = "#3E5E78"
-    WHITE = "#FFFFFF"
+    PANEL_ACTIVE = COLORS["slate_navy"]
+    ACCENT = COLORS["seafoam"]
+    ACCENT_DIM = COLORS["seafoam_dim"]
+    ACCENT_LIGHT = COLORS["seafoam_glow"]
+    CORAL = COLORS["coral"]
+    YELLOW = COLORS["amber"]
+    BLUE = COLORS["text_secondary"]
+    PURPLE = COLORS["text_bright"]
+    TEXT = COLORS["hd_white"]
+    TEXT_DIM = COLORS["text_muted"]
+    WHITE = COLORS["text_bright"]
+    TEXT_MUTED = COLORS["text_muted"]
     BORDER = "#1A3352"
     BORDER_LIGHT = "#254565"
     SELECTION = "#1A3A5C"

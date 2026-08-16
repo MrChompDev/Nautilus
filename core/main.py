@@ -17,8 +17,6 @@ import signal
 import sys
 from datetime import datetime
 
-
-
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, PROJECT_ROOT)
 
@@ -1115,7 +1113,9 @@ class NautilusShell(QMainWindow):
         for app_id, entry in APP_MANIFEST.items():
             action = apps_menu.addAction(f"  {entry.name}")
             action.setIcon(get_logo(app_id))
-            action.triggered.connect(lambda checked, aid=app_id: self._launcher.launch(aid))
+            action.triggered.connect(
+                lambda checked, aid=app_id: self._launch_or_bring_to_front(aid)
+            )
 
         apps_menu.addSeparator()
         apps_menu.addAction("\u23fb  Terminate All").triggered.connect(self._launcher.terminate_all)
@@ -1130,6 +1130,20 @@ class NautilusShell(QMainWindow):
                                if reason == QSystemTrayIcon.DoubleClick else None)
         tray.show()
         return tray
+
+    def _launch_or_bring_to_front(self, app_id: str) -> None:
+        """Try to bring the app window to front; launch it if not running."""
+        if self._launcher and self._launcher.is_running(app_id):
+            # Try to find and raise the existing window
+            app_title = APP_MANIFEST[app_id].name
+            for widget in QApplication.topLevelWidgets():
+                if app_title.lower() in widget.windowTitle().lower():
+                    widget.raise_()
+                    widget.activateWindow()
+                    return
+        # App not running or not found — launch it
+        if self._launcher:
+            self._launcher.launch(app_id)
 
     def _setup_launcher_hooks(self):
         self._launcher.on_launch(lambda app_id, proc: self._log.info(

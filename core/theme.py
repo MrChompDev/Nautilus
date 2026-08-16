@@ -46,15 +46,15 @@ COLORS = {
     "text_muted":      "#506070",   # Muted / disabled text
     "text_bright":     "#FFFFFF",   # Peak brightness (headings, selection)
 
-    # ── Borders & Lines ──
-    "border":          "#152D44",   # Standard borders
+    # ── Refined borders & surfaces ──
+    "border":          "#173250",   # Slightly refined standard borders
     "border_active":   "#00F2C2",   # Active / focused border
     "border_dim":      "#0A1A2A",   # Subtle dividers
 
-    # ── Interactive Surfaces ──
-    "surface_hover":   "#132A40",   # Hover state for panels
-    "surface_pressed": "#0A1A2A",   # Pressed state
-    "surface_selected":"#1A3352",   # Selected item bg
+    # ── Enhanced interactive surfaces ──
+    "surface_hover":   "#15304A",   # Subtly refined hover state for panels
+    "surface_pressed": "#0C1520",   # Refined pressed state
+    "surface_selected":"#1E3A5F",   # Refined selected item bg
 
     # ── Terminal-Specific ──
     "terminal_bg":     "#030810",   # Terminal background

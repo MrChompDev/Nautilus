@@ -432,7 +432,7 @@ class SettingsDialog(QDialog):
         g3_lay = QHBoxLayout()
 
         self.accent_colors = {
-            "Teal (#00F2C2)": "#00F2C2",
+            "Teal (#00F2C2)": COLORS["seafoam"],
             "Blue (#4A9EFF)": "#4A9EFF",
             "Purple (#B24BF3)": "#B24BF3",
             "Orange (#FF8C42)": "#FF8C42",
@@ -445,7 +445,7 @@ class SettingsDialog(QDialog):
         self.accent_combo.setStyleSheet(COMBO_STYLE)
         for label in self.accent_colors:
             self.accent_combo.addItem(label)
-        current_accent = self.settings.get("accent_color", "#00F2C2")
+        current_accent = self.settings.get("accent_color", COLORS["seafoam"])
         for i, (label, color) in enumerate(self.accent_colors.items()):
             if color == current_accent:
                 self.accent_combo.setCurrentIndex(i)
