@@ -1,0 +1,10 @@
+{
+  "id": "leviathan",
+  "profile": "tiny",
+  "params": 201344,
+  "int8_bytes": 201344,
+  "val_loss": 6.303827301661173,
+  "steps": 80,
+  "tokens": 63055,
+  "trained": "2026-08-18 06:53:32"
+}

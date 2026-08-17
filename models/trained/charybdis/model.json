@@ -1,0 +1,10 @@
+{
+  "id": "charybdis",
+  "profile": "tiny",
+  "params": 201344,
+  "int8_bytes": 201344,
+  "val_loss": 6.27534720102946,
+  "steps": 80,
+  "tokens": 47476,
+  "trained": "2026-08-18 06:54:05"
+}
