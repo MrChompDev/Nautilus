@@ -24,6 +24,7 @@ from apps.Abyssal.src.views.palette import CommandPalette
 from apps.Abyssal.src.views.sidebar import Sidebar
 from apps.Abyssal.src.views.status_bar import StatusBar
 from apps.Abyssal.src.views.tab_bar import TabBar
+from core.theme import glass_bg, glass_edge
 
 
 class AbyssalMainWindow(QMainWindow):
@@ -133,8 +134,10 @@ class AbyssalMainWindow(QMainWindow):
         central = QWidget()
         central.setStyleSheet(f"""
             QWidget {{
-                background-color: {AbyssalTheme.BG};
+                background: {glass_bg(170)};
                 color: {AbyssalTheme.TEXT};
+                border: 1px solid {glass_edge()};
+                border-radius: 18px;
             }}
         """)
         self.setCentralWidget(central)
@@ -155,8 +158,10 @@ class AbyssalMainWindow(QMainWindow):
         right_panel = QWidget()
         right_panel.setStyleSheet(f"""
             QWidget {{
-                background-color: {AbyssalTheme.BG};
+                background: {glass_bg(160)};
                 color: {AbyssalTheme.TEXT};
+                border: 1px solid {glass_edge()};
+                border-radius: 18px;
             }}
         """)
         right_layout = QVBoxLayout(right_panel)

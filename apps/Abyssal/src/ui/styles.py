@@ -1,6 +1,15 @@
 
 
-from core.theme import COLORS
+from core.theme import (
+    COLORS,
+    RADIUS_LG,
+    RADIUS_MD,
+    glass_bg,
+    glass_bg_dark,
+    glass_edge,
+    glass_sheen,
+    hex_to_rgba,
+)
 
 
 class AbyssalTheme:
@@ -45,6 +54,11 @@ class AbyssalTheme:
     WARNING_UNDERLINE = "#FFAA00"
     INFO_UNDERLINE = "#4AA8FF"
 
+    glass_bg = glass_bg(170)
+    glass_bg_dark = glass_bg_dark(140)
+    glass_edge = glass_edge()
+    glass_sheen = glass_sheen()
+
     @staticmethod
     def get_stylesheet():
         t = AbyssalTheme
@@ -61,44 +75,48 @@ class AbyssalTheme:
 
             /* ── Menu Bar ── */
             QMenuBar {{
-                background-color: {t.TITLE_BAR};
+                background: {glass_bg(190)};
                 color: {t.TEXT};
-                border-bottom: 1px solid {t.BORDER};
+                border-bottom: 1px solid {glass_edge()};
                 padding: 0;
             }}
             QMenuBar::item {{
                 background: transparent;
                 padding: 5px 12px;
                 spacing: 3px;
+                border-radius: {RADIUS_MD};
             }}
             QMenuBar::item:selected {{
-                background-color: {t.PANEL_HOVER};
+                background: {glass_bg(160)};
+                border-color: {glass_edge()};
             }}
             QMenuBar::item:pressed {{
-                background-color: {t.ACCENT_DIM};
+                background: {hex_to_rgba(COLORS["seafoam_deep"], 180)};
+                color: {t.ACCENT};
             }}
             QMenu {{
-                background-color: {t.PANEL};
+                background: {glass_bg(230)};
                 color: {t.TEXT};
-                border: 1px solid {t.BORDER_LIGHT};
+                border: 1px solid {glass_edge()};
                 padding: 4px 0;
-                border-radius: 4px;
+                border-radius: {RADIUS_MD};
             }}
             QMenu::item {{
                 padding: 5px 24px 5px 10px;
                 spacing: 12px;
-                border: 1px solid transparent;
+                border: none;
+                border-radius: 0px;
             }}
             QMenu::item:selected {{
-                background-color: {t.PANEL_ACTIVE};
-                border-color: {t.BORDER_LIGHT};
+                background: {hex_to_rgba(COLORS["seafoam_deep"], 180)};
+                color: {t.ACCENT};
             }}
             QMenu::item:disabled {{
                 color: {t.TEXT_MUTED};
             }}
             QMenu::separator {{
                 height: 1px;
-                background: {t.BORDER};
+                background: {glass_edge()};
                 margin: 4px 12px;
             }}
             QMenu::indicator {{
@@ -108,33 +126,35 @@ class AbyssalTheme:
 
             /* ── Splitter ── */
             QSplitter::handle {{
-                background-color: {t.BORDER};
+                background: {glass_edge(40)};
+                border-radius: 1px;
             }}
             QSplitter::handle:horizontal {{
-                width: 1px;
-                min-width: 1px;
-                max-width: 1px;
+                width: 3px;
+                min-width: 3px;
+                max-width: 3px;
             }}
             QSplitter::handle:vertical {{
-                height: 1px;
-                min-height: 1px;
-                max-height: 1px;
+                height: 3px;
+                min-height: 3px;
+                max-height: 3px;
             }}
             QSplitter::handle:hover {{
-                background-color: {t.ACCENT_DIM};
+                background: {COLORS["seafoam_dim"]};
             }}
 
             /* ── Editor / Text ── */
             QPlainTextEdit, QTextEdit {{
-                background-color: {t.BG};
+                background-color: {hex_to_rgba(COLORS["terminal_bg"], 200)};
                 color: {t.TEXT};
-                border: none;
+                border: 1px solid {glass_edge(60)};
+                border-radius: {RADIUS_MD};
                 selection-background-color: {t.SELECTION};
                 selection-color: {t.TEXT};
                 caretprecision: 0.5;
             }}
             QPlainTextEdit:focus, QTextEdit:focus {{
-                border: none;
+                border: 1px solid {t.ACCENT};
             }}
 
             /* ── Scrollbars ── */
@@ -142,20 +162,23 @@ class AbyssalTheme:
                 background: transparent;
                 width: 10px;
                 border: none;
-                margin: 0;
+                margin: 2px;
                 padding: 0;
             }}
             QScrollBar::handle:vertical {{
-                background: {t.SCROLLBAR_INACTIVE};
-                min-height: 30px;
+                background: {hex_to_rgba(COLORS["scrollbar_handle"], 180)};
+                min-height: 24px;
                 border-radius: 5px;
                 margin: 0;
+                border: 2px solid transparent;
             }}
             QScrollBar::handle:vertical:hover {{
-                background: {t.SCROLLBAR_HOVER};
+                background: {hex_to_rgba(COLORS["scrollbar_hover"], 220)};
+                border: 2px solid transparent;
             }}
             QScrollBar::handle:vertical:pressed {{
-                background: {t.SCROLLBAR_HOVER};
+                background: {hex_to_rgba(COLORS["seafoam_dim"], 200)};
+                border: 2px solid transparent;
             }}
             QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{
                 height: 0px;
@@ -170,20 +193,23 @@ class AbyssalTheme:
                 background: transparent;
                 height: 10px;
                 border: none;
-                margin: 0;
+                margin: 2px;
                 padding: 0;
             }}
             QScrollBar::handle:horizontal {{
-                background: {t.SCROLLBAR_INACTIVE};
-                min-width: 30px;
+                background: {hex_to_rgba(COLORS["scrollbar_handle"], 180)};
+                min-width: 24px;
                 border-radius: 5px;
                 margin: 0;
+                border: 2px solid transparent;
             }}
             QScrollBar::handle:horizontal:hover {{
-                background: {t.SCROLLBAR_HOVER};
+                background: {hex_to_rgba(COLORS["scrollbar_hover"], 220)};
+                border: 2px solid transparent;
             }}
             QScrollBar::handle:horizontal:pressed {{
-                background: {t.SCROLLBAR_HOVER};
+                background: {hex_to_rgba(COLORS["seafoam_dim"], 200)};
+                border: 2px solid transparent;
             }}
             QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{
                 width: 0px;
@@ -197,28 +223,30 @@ class AbyssalTheme:
 
             /* ── Tree View ── */
             QTreeView {{
-                background-color: {t.PANEL};
+                background: {glass_bg(100)};
                 color: {t.TEXT};
                 border: none;
                 outline: none;
                 show-decoration-selected: 0;
+                border-radius: {RADIUS_MD};
             }}
             QTreeView::item {{
                 padding: 2px 0;
                 border: none;
                 min-height: 22px;
                 margin: 0;
+                border-radius: {RADIUS_MD};
             }}
             QTreeView::item:hover {{
-                background-color: {t.PANEL_HOVER};
+                background: {glass_bg(140)};
             }}
             QTreeView::item:selected {{
-                background-color: {t.SELECTION};
-                color: {t.TEXT};
+                background: {hex_to_rgba(COLORS["surface_selected"], 180)};
+                color: {t.ACCENT};
                 border: none;
             }}
             QTreeView::branch {{
-                background: {t.PANEL};
+                background: transparent;
                 border: none;
             }}
             QTreeView::item:disabled {{
@@ -227,17 +255,18 @@ class AbyssalTheme:
 
             /* ── Line Edit ── */
             QLineEdit {{
-                background-color: {t.BG};
+                background: {glass_bg_dark(120)};
                 color: {t.TEXT};
-                border: 1px solid {t.BORDER};
+                border: 1px solid {glass_edge(60)};
                 padding: 4px 8px;
-                border-radius: 3px;
+                border-radius: {RADIUS_MD};
                 selection-background-color: {t.ACCENT};
                 selection-color: {t.BG};
                 min-height: 24px;
             }}
             QLineEdit:focus {{
-                border-color: {t.ACCENT};
+                border: 1px solid {t.ACCENT};
+                background: {glass_bg_dark(150)};
                 selection-background-color: {t.ACCENT_DIM};
             }}
             QLineEdit::placeholder {{
@@ -245,53 +274,58 @@ class AbyssalTheme:
             }}
             QLineEdit:disabled {{
                 color: {t.TEXT_MUTED};
-                background-color: {t.PANEL_ALT};
+                background: {glass_bg_dark(60)};
             }}
 
             /* ── Buttons ── */
             QPushButton {{
-                background-color: transparent;
+                background: {glass_bg(140)};
                 color: {t.TEXT_DIM};
-                border: 1px solid transparent;
+                border: 1px solid {glass_edge(70)};
                 padding: 4px 10px;
-                border-radius: 3px;
+                border-radius: {RADIUS_MD};
                 text-align: left;
             }}
             QPushButton:hover {{
-                color: {t.TEXT};
-                background-color: {t.PANEL_HOVER};
-                border-color: {t.BORDER_LIGHT};
+                color: {t.ACCENT};
+                background: {glass_bg(190)};
+                border-color: {glass_edge(100)};
             }}
             QPushButton:pressed {{
-                background-color: {t.ACCENT_DIM};
-                color: {t.BG};
+                background: {glass_bg_dark(200)};
+                border-color: {glass_edge(120)};
+                color: {t.ACCENT};
             }}
             QPushButton:checked {{
-                background-color: {t.ACCENT_DIM};
-                color: {t.BG};
-                border-color: {t.ACCENT_DIM};
+                background: {hex_to_rgba(COLORS["seafoam_deep"], 180)};
+                border-color: {glass_edge(120)};
+                color: {t.ACCENT};
             }}
             QPushButton:disabled {{
                 color: {t.TEXT_MUTED};
-                background: transparent;
+                background: {glass_bg_dark(80)};
+                border-color: {COLORS["border_dim"]};
             }}
 
             /* ── Tab Widget ── */
             QTabWidget::pane {{
-                border: none;
-                background-color: {t.BG};
+                background: {glass_bg(160)};
+                border: 1px solid {glass_edge()};
+                border-radius: {RADIUS_LG};
+                top: -1px;
             }}
             QTabBar {{
-                background-color: {t.INACTIVE_TAB};
+                background: {glass_bg_dark(120)};
+                border-radius: {RADIUS_LG};
             }}
 
             /* ── Tooltips ── */
             QToolTip {{
-                background-color: {t.PANEL};
+                background: {glass_bg(240)};
                 color: {t.TEXT};
-                border: 1px solid {t.BORDER_LIGHT};
+                border: 1px solid {glass_edge()};
                 padding: 4px 8px;
-                border-radius: 3px;
+                border-radius: {RADIUS_MD};
                 opacity: 230;
             }}
             QToolTip::label {{
@@ -302,9 +336,9 @@ class AbyssalTheme:
 
             /* ── Status Bar ── */
             QStatusBar {{
-                background-color: {t.STATUS_BAR};
+                background: {glass_bg(170)};
                 color: {t.BG};
-                border: none;
+                border-top: 1px solid {glass_edge()};
             }}
             QStatusBar::item {{
                 border: none;
@@ -320,8 +354,9 @@ class AbyssalTheme:
 
             /* ── GroupBox ── */
             QGroupBox {{
-                border: 1px solid {t.BORDER};
-                border-radius: 4px;
+                background: {glass_bg(60)};
+                border: 1px solid {glass_edge()};
+                border-radius: {RADIUS_LG};
                 margin-top: 12px;
                 padding-top: 16px;
                 font-weight: bold;
@@ -334,15 +369,16 @@ class AbyssalTheme:
 
             /* ── ProgressBar ── */
             QProgressBar {{
-                background-color: {t.PANEL_ALT};
-                border: 1px solid {t.BORDER};
-                border-radius: 3px;
+                background: {glass_bg_dark(100)};
+                border: 1px solid {glass_edge(50)};
+                border-radius: 4px;
                 text-align: center;
                 color: {t.TEXT_DIM};
                 min-height: 16px;
             }}
             QProgressBar::chunk {{
-                background-color: {t.ACCENT};
-                border-radius: 2px;
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 {COLORS["seafoam_deep"]}, stop:1 {t.ACCENT});
+                border-radius: 3px;
             }}
         """

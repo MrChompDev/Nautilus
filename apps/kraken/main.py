@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """
 Kraken AI — Nautilus OS desktop app.
-Local-first agentic engine: chat with single agents or a parallel
-multi-agent workforce, with a real-time workforce tree view.
+
+Deep sea creature themed AI: four specialized models (Kraken, Leviathan,
+Charybdis, Megalodon) with a ChatGPT/Claude-style desktop interface.
 """
 
 import os
@@ -34,13 +35,12 @@ except ImportError:
 
     def create_nautilus_palette():
         from PySide6.QtGui import QPalette
-
         return QPalette()
 
     def get_global_stylesheet():
         return ""
 
-from apps.kraken.engine.config import KrakenConfig  # noqa: E402
+from apps.kraken.core.config import KrakenConfig  # noqa: E402
 from apps.kraken.ui.main_window import KrakenWindow  # noqa: E402
 
 
@@ -58,7 +58,6 @@ def main():
 
     try:
         from core.icons import get_logo
-
         app.setWindowIcon(get_logo("kraken"))
     except Exception:
         pass

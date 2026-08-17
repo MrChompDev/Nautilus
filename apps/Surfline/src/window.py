@@ -47,7 +47,19 @@ from apps.Surfline.src.icons import ensure_icons, icon_path
 from apps.Surfline.src.json_viewer import StructuredDataViewer
 from apps.Surfline.src.reef_shield import ReefShieldFilter
 from apps.Surfline.src.terminal import TerminalWidget
-from apps.Surfline.src.theme import COLORS, FONTS, get_stylesheet
+from apps.Surfline.src.theme import (
+    _R_LG,
+    _R_MD,
+    _R_SM,
+    COLORS,
+    FONTS,
+    _glass_bg,
+    _glass_bg_dark,
+    _glass_bg_heavy,
+    _glass_edge,
+    _hex_to_rgba,
+    get_stylesheet,
+)
 from apps.Surfline.src.tide_sync import TideSyncManager
 
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
@@ -92,8 +104,10 @@ class ProfileDialog(QDialog):
         self.setMinimumSize(500, 400)
         self.setStyleSheet(f"""
             QDialog {{
-                background: {COLORS['bg_primary']};
+                background: {_glass_bg(180)};
                 color: {COLORS['text_primary']};
+                border: 1px solid {_glass_edge()};
+                border-radius: {_R_LG};
             }}
         """)
         self.setup_ui()
@@ -118,9 +132,10 @@ class ProfileDialog(QDialog):
         self.profile_list = QComboBox()
         self.profile_list.setStyleSheet(f"""
             QComboBox {{
-                background: {COLORS['bg_input']};
+                background: {_glass_bg_dark(130)};
                 color: {COLORS['text_primary']};
-                border: 1px solid {COLORS['border']};
+                border: 1px solid {_glass_edge(60)};
+                border-radius: {_R_SM};
                 padding: 6px 8px;
                 font-family: "{FONTS['mono']}", "{FONTS['fallback_mono']}";
                 font-size: {FONTS['size_md']}px;
@@ -198,8 +213,10 @@ class HeaderViewerDialog(QDialog):
         self.setMinimumSize(600, 400)
         self.setStyleSheet(f"""
             QDialog {{
-                background: {COLORS['bg_primary']};
+                background: {_glass_bg(180)};
                 color: {COLORS['text_primary']};
+                border: 1px solid {_glass_edge()};
+                border-radius: {_R_LG};
             }}
         """)
         layout = QVBoxLayout(self)
@@ -223,9 +240,10 @@ class HeaderViewerDialog(QDialog):
         text.setReadOnly(True)
         text.setStyleSheet(f"""
             QTextEdit {{
-                background: {COLORS['terminal_bg']};
+                background: {_hex_to_rgba(COLORS['terminal_bg'], 200)};
                 color: {COLORS['terminal_text']};
-                border: 1px solid {COLORS['border']};
+                border: 1px solid {_glass_edge(60)};
+                border-radius: {_R_MD};
                 font-family: "{FONTS['mono']}", "{FONTS['fallback_mono']}";
                 font-size: {FONTS['size_sm']}px;
                 padding: 8px;
@@ -321,31 +339,33 @@ class SurflineWindow(QMainWindow):
         self.tab_bar.setStyleSheet(f"""
             QTabWidget::pane {{
                 border: none;
-                background: {COLORS['bg_primary']};
+                background: {_glass_bg(160)};
+                border-radius: {_R_LG};
             }}
             QTabBar {{
-                background: {COLORS['bg_secondary']};
-                border-bottom: 1px solid {COLORS['border']};
+                background: {_glass_bg(190)};
+                border-bottom: 1px solid {_glass_edge()};
             }}
             QTabBar::tab {{
-                background: {COLORS['tab_inactive']};
+                background: {_glass_bg_dark(120)};
                 color: {COLORS['text_secondary']};
                 padding: 4px 12px 4px 12px;
                 margin-right: 1px;
-                border: none;
+                border: 1px solid transparent;
                 border-bottom: 2px solid transparent;
+                border-radius: {_R_SM};
                 min-width: 100px;
                 max-width: 220px;
                 height: 28px;
                 font-size: {FONTS['size_sm']}px;
             }}
             QTabBar::tab:selected {{
-                background: {COLORS['tab_active']};
+                background: {_glass_bg(180)};
                 color: {COLORS['accent']};
                 border-bottom: 2px solid {COLORS['accent']};
             }}
             QTabBar::tab:hover:!selected {{
-                background: {COLORS['tab_hover']};
+                background: {_glass_bg(150)};
                 color: {COLORS['text_primary']};
             }}
         """)
@@ -362,22 +382,24 @@ class SurflineWindow(QMainWindow):
         self.bottom_tabs.setStyleSheet(f"""
             QTabWidget::pane {{
                 border: none;
-                background: {COLORS['bg_primary']};
-                border-top: 1px solid {COLORS['border']};
+                background: {_glass_bg(160)};
+                border-top: 1px solid {_glass_edge()};
+                border-radius: 0px;
             }}
             QTabBar::tab {{
-                background: {COLORS['tab_inactive']};
+                background: {_glass_bg_dark(120)};
                 color: {COLORS['text_secondary']};
                 padding: 3px 12px;
-                border: none;
+                border: 1px solid transparent;
                 border-bottom: 2px solid transparent;
+                border-radius: {_R_SM};
                 font-family: "{FONTS['mono']}", "{FONTS['fallback_mono']}";
                 font-size: {FONTS['size_xs']}px;
                 font-weight: bold;
                 letter-spacing: 1px;
             }}
             QTabBar::tab:selected {{
-                background: {COLORS['tab_active']};
+                background: {_glass_bg(180)};
                 color: {COLORS['accent']};
                 border-bottom: 2px solid {COLORS['accent']};
             }}
@@ -402,8 +424,8 @@ class SurflineWindow(QMainWindow):
         toolbar = QWidget()
         toolbar.setStyleSheet(f"""
             QWidget {{
-                background: {COLORS['bg_secondary']};
-                border-bottom: 1px solid {COLORS['border']};
+                background: {_glass_bg(190)};
+                border-bottom: 1px solid {_glass_edge()};
             }}
         """)
         toolbar.setMinimumHeight(36)
@@ -416,16 +438,17 @@ class SurflineWindow(QMainWindow):
                 background: transparent;
                 color: {COLORS['text_secondary']};
                 border: none;
+                border-radius: {_R_SM};
                 padding: 3px 6px;
                 font-size: {FONTS['size_lg']}px;
             }}
             QToolButton:hover {{
                 color: {COLORS['accent']};
-                background: {COLORS['bg_elevated']};
+                background: {_glass_bg(130)};
             }}
             QToolButton:pressed {{
                 color: {COLORS['accent']};
-                background: {COLORS['accent_darker']}40;
+                background: {_hex_to_rgba(COLORS['accent_darker'], 64)};
             }}
         """
 
@@ -461,9 +484,10 @@ class SurflineWindow(QMainWindow):
         self.url_bar.setPlaceholderText("URL / Search")
         self.url_bar.setStyleSheet(f"""
             QLineEdit {{
-                background: {COLORS['bg_input']};
+                background: {_glass_bg_dark(120)};
                 color: {COLORS['text_primary']};
-                border: 1px solid {COLORS['border']};
+                border: 1px solid {_glass_edge(60)};
+                border-radius: {_R_SM};
                 padding: 3px 10px;
                 selection-background-color: {COLORS['selection']};
                 font-family: "{FONTS['mono']}", "{FONTS['fallback_mono']}";
@@ -480,9 +504,10 @@ class SurflineWindow(QMainWindow):
         self.btn_go.setText("GO")
         self.btn_go.setStyleSheet(f"""
             QToolButton {{
-                background: {COLORS['accent_darker']};
+                background: {_hex_to_rgba(COLORS['accent_darker'], 160)};
                 color: {COLORS['bg_primary']};
-                border: none;
+                border: 1px solid {_glass_edge(70)};
+                border-radius: {_R_SM};
                 padding: 3px 12px;
                 font-family: "{FONTS['mono']}", "{FONTS['fallback_mono']}";
                 font-size: {FONTS['size_sm']}px;
@@ -618,9 +643,9 @@ class SurflineWindow(QMainWindow):
         self.setStatusBar(self.statusbar)
         self.statusbar.setStyleSheet(f"""
             QStatusBar {{
-                background: {COLORS['bg_secondary']};
+                background: {_glass_bg(170)};
                 color: {COLORS['text_secondary']};
-                border-top: 1px solid {COLORS['border']};
+                border-top: 1px solid {_glass_edge()};
                 font-family: "{FONTS['mono']}", "{FONTS['fallback_mono']}";
                 font-size: {FONTS['size_sm']}px;
             }}
@@ -1395,7 +1420,7 @@ class SurflineWindow(QMainWindow):
                     self._devtools_view.setMinimumSize(600, 400)
                     self._devtools_view.setStyleSheet(f"""
                         QMainWindow {{
-                            background: {COLORS['bg_primary']};
+                            background: {_glass_bg(180)};
                         }}
                     """)
                     page.setDevToolsPage(self._devtools_view.page())
@@ -1490,22 +1515,24 @@ class SurflineWindow(QMainWindow):
         menu = QMenu(self)
         menu.setStyleSheet(f"""
             QMenu {{
-                background: {COLORS['bg_secondary']};
+                background: {_glass_bg_heavy(230)};
                 color: {COLORS['text_primary']};
-                border: 1px solid {COLORS['border']};
-                padding: 2px 0px;
+                border: 1px solid {_glass_edge()};
+                border-radius: {_R_MD};
+                padding: 4px 0px;
                 font-size: {FONTS['size_sm']}px;
             }}
             QMenu::item {{
                 padding: 5px 20px;
             }}
             QMenu::item:selected {{
-                background: {COLORS['accent_darker']};
+                background: {_hex_to_rgba(COLORS['accent_darker'], 180)};
+                color: {COLORS['accent']};
             }}
             QMenu::separator {{
                 height: 1px;
-                background: {COLORS['border']};
-                margin: 2px 0px;
+                background: {_glass_edge()};
+                margin: 2px 8px;
             }}
         """)
 
@@ -1549,17 +1576,19 @@ class SurflineWindow(QMainWindow):
         menu = QMenu(self)
         menu.setStyleSheet(f"""
             QMenu {{
-                background: {COLORS['bg_secondary']};
+                background: {_glass_bg_heavy(230)};
                 color: {COLORS['text_primary']};
-                border: 1px solid {COLORS['border']};
-                padding: 2px 0px;
+                border: 1px solid {_glass_edge()};
+                border-radius: {_R_MD};
+                padding: 4px 0px;
                 font-size: {FONTS['size_sm']}px;
             }}
             QMenu::item {{
                 padding: 5px 20px;
             }}
             QMenu::item:selected {{
-                background: {COLORS['accent_darker']};
+                background: {_hex_to_rgba(COLORS['accent_darker'], 180)};
+                color: {COLORS['accent']};
             }}
         """)
         for bm in bookmarks[-30:]:
@@ -1596,8 +1625,10 @@ class SurflineWindow(QMainWindow):
         dlg.setMinimumSize(350, 200)
         dlg.setStyleSheet(f"""
             QDialog {{
-                background: {COLORS['bg_primary']};
+                background: {_glass_bg(180)};
                 color: {COLORS['text_primary']};
+                border: 1px solid {_glass_edge()};
+                border-radius: {_R_LG};
             }}
         """)
         dlg_layout = QVBoxLayout(dlg)
@@ -1640,9 +1671,10 @@ class SurflineWindow(QMainWindow):
         cancel = QPushButton("Cancel")
         cancel.setStyleSheet(f"""
             QPushButton {{
-                background: {COLORS['bg_elevated']};
+                background: {_glass_bg(140)};
                 color: {COLORS['text_primary']};
-                border: 1px solid {COLORS['border']};
+                border: 1px solid {_glass_edge(70)};
+                border-radius: {_R_SM};
                 padding: 6px 16px;
             }}
         """)
@@ -1651,9 +1683,10 @@ class SurflineWindow(QMainWindow):
         clear_btn = QPushButton("Clear")
         clear_btn.setStyleSheet(f"""
             QPushButton {{
-                background: {COLORS['accent_darker']};
+                background: {_hex_to_rgba(COLORS['accent_darker'], 160)};
                 color: {COLORS['bg_primary']};
-                border: none;
+                border: 1px solid {_glass_edge(70)};
+                border-radius: {_R_SM};
                 padding: 6px 20px;
                 font-weight: bold;
             }}

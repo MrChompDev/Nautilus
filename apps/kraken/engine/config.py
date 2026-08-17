@@ -15,7 +15,7 @@ from apps.kraken.engine import __version__
 
 DEFAULT_HOME = os.path.join(os.path.expanduser("~"), ".kraken")
 
-DEFAULT_MODEL = "coding"
+DEFAULT_MODEL = "kraken"
 
 DEFAULT_PROVIDERS = {
     # Nautilus from-scratch local models (no network, no API keys)
@@ -36,12 +36,17 @@ DEFAULT_PROVIDERS = {
     "together": {"label": "Together", "base_url": "https://api.together.xyz/v1", "kind": "openai"},
 }
 
-# Nautilus from-scratch models and what they do.
-NAUTILUS_MODELS = {
-    "coding": "Coding — code + project brain",
-    "writing": "Writing — READMEs & prose",
-    "pentest": "Pentest — security assistant",
+# Sea-creature named models — each a specialist.
+# IDs match trained weight directories under models/trained/<id>/weights.npz.
+SEA_CREATURE_MODELS = {
+    "kraken":    "Kraken    — general-purpose, the flagship",
+    "leviathan": "Leviathan — deep reasoning, architecture & planning",
+    "megalodon": "Megalodon — code generation, fast & aggressive",
+    "charybdis": "Charybdis — security analysis, pentest & hardening",
 }
+
+# Legacy alias so old configs don't break.
+NAUTILUS_MODELS = SEA_CREATURE_MODELS
 
 # Providers that talk to the cloud and want an API key.
 CLOUD_PROVIDERS = (

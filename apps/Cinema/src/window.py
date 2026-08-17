@@ -44,7 +44,7 @@ from apps.Cinema.src.widgets import (
 )
 
 try:
-    from core.theme import COLORS, FONTS, SPACING
+    from core.theme import COLORS, FONTS, SPACING, glass_bg, glass_bg_dark, glass_edge, glass_sheen
 except ImportError:
     COLORS = {"abyss_navy": "#081626", "slate_navy": "#0E2238", "deep_navy": "#050D14",
               "void_black": "#02060A", "seafoam": "#00F2C2", "seafoam_dim": "#00C9A0",
@@ -55,6 +55,14 @@ except ImportError:
     FONTS = {"mono": "JetBrains Mono", "ui": "Segoe UI", "size_xs": 10, "size_sm": 11,
              "size_md": 12, "size_lg": 13, "size_xl": 14, "size_xxl": 16, "size_title": 20}
     SPACING = {"xs": 2, "sm": 4, "md": 8, "lg": 12, "xl": 16, "xxl": 24, "xxxl": 32}
+
+    def hex_to_rgba(h, a=255):
+        v = h.lstrip("#")
+        return f"rgba({int(v[0:2],16)},{int(v[2:4],16)},{int(v[4:6],16)},{a})"
+    def glass_bg(a=180): return hex_to_rgba(COLORS["slate_navy"], a)
+    def glass_bg_dark(a=140): return hex_to_rgba(COLORS["deep_navy"], a)
+    def glass_edge(a=48): return hex_to_rgba(COLORS["seafoam"], a)
+    def glass_sheen(): return "rgba(238, 244, 248, 26)"
 
 DISCLAIMER = (
     "Cinema is a tool for playing media that you own or are licensed to use. "
@@ -115,6 +123,7 @@ class CinemaWindow(QMainWindow):
 
     def _setup_ui(self):
         central = QWidget()
+        central.setStyleSheet(f"background: {glass_bg_dark(200)};")
         self.setCentralWidget(central)
         root = QVBoxLayout(central)
         root.setContentsMargins(0, 0, 0, 0)
@@ -123,7 +132,7 @@ class CinemaWindow(QMainWindow):
         # ── Top bar ──
         top = QFrame()
         top.setFixedHeight(48)
-        top.setStyleSheet(f"background-color: {COLORS['void_black']}; border-bottom: 1px solid {COLORS['border']};")
+        top.setStyleSheet(f"background-color: {glass_bg_dark(220)}; border-bottom: 1px solid {glass_edge()};")
         tl = QHBoxLayout(top)
         tl.setContentsMargins(SPACING["md"], 0, SPACING["md"], 0)
         tl.setSpacing(SPACING["md"])
@@ -143,8 +152,10 @@ class CinemaWindow(QMainWindow):
         self._search.setFixedWidth(320)
         self._search.setStyleSheet(f"""
             QLineEdit {{
-                background: {COLORS['deep_navy']}; color: {COLORS['hd_white']};
-                border: 1px solid {COLORS['border']}; padding: 6px 12px;
+                background: {glass_bg(120)}; color: {COLORS['hd_white']};
+                border: 1px solid {glass_edge()}; border-radius: 8px;
+                border-top: 1px solid {glass_sheen()};
+                padding: 6px 12px;
                 font-family: "{FONTS['mono']}"; font-size: {FONTS['size_sm']}px;
             }}
             QLineEdit:focus {{ border-color: {COLORS['seafoam']}; }}
@@ -159,7 +170,7 @@ class CinemaWindow(QMainWindow):
         # ── Body ──
         body = QSplitter(Qt.Horizontal)
         body.setHandleWidth(1)
-        body.setStyleSheet(f"QSplitter::handle {{ background: {COLORS['border']}; }}")
+        body.setStyleSheet(f"QSplitter::handle {{ background: {glass_edge()}; }}")
 
         # Sidebar
         self._sidebar = Sidebar()
@@ -185,7 +196,7 @@ class CinemaWindow(QMainWindow):
         # Status bar
         status = QFrame()
         status.setFixedHeight(24)
-        status.setStyleSheet(f"background-color: {COLORS['slate_navy']}; border-top: 1px solid {COLORS['border']};")
+        status.setStyleSheet(f"background-color: {glass_bg(160)}; border-top: 1px solid {glass_edge()};")
         sl = QHBoxLayout(status)
         sl.setContentsMargins(SPACING["md"], 0, SPACING["md"], 0)
         self._status = QLabel("Ready")
@@ -228,9 +239,11 @@ class CinemaWindow(QMainWindow):
         btn.setStyleSheet(f"""
             QPushButton {{
                 background: transparent; color: {COLORS['seafoam']};
-                border: 1px solid {COLORS['border']}; font-size: 14px;
+                border: 1px solid {glass_edge()}; border-radius: 6px;
+                border-top: 1px solid {glass_sheen()};
+                font-size: 14px;
             }}
-            QPushButton:hover {{ background: {COLORS['surface_hover']}; border-color: {COLORS['seafoam']}; }}
+            QPushButton:hover {{ background: {glass_bg(80)}; border-color: {COLORS['seafoam']}; }}
         """)
         btn.clicked.connect(slot)
         return btn
@@ -250,8 +263,10 @@ class CinemaWindow(QMainWindow):
         else:
             style = f"""
                 QPushButton {{
-                    background: {COLORS['slate_navy']}; color: {COLORS['seafoam']};
-                    border: 1px solid {COLORS['seafoam']}; padding: 8px 18px;
+                    background: {glass_bg(140)}; color: {COLORS['seafoam']};
+                    border: 1px solid {COLORS['seafoam']}; border-radius: 8px;
+                    border-top: 1px solid {glass_sheen()};
+                    padding: 8px 18px;
                     font-family: "{FONTS['mono']}"; font-size: {FONTS['size_sm']}px;
                 }}
                 QPushButton:hover {{ background: {COLORS['seafoam_deep']}; }}
@@ -440,8 +455,9 @@ class CinemaWindow(QMainWindow):
         box = QFrame()
         box.setStyleSheet(f"""
             QFrame {{
-                background: {COLORS['slate_navy']}; border: 1px solid {COLORS['amber']};
-                border-radius: 4px; padding: 4px;
+                background: {glass_bg(150)}; border: 1px solid {COLORS['amber']};
+                border-radius: 12px; padding: 4px;
+                border-top: 1px solid {glass_sheen()};
             }}
         """)
         lay = QHBoxLayout(box)
@@ -472,8 +488,10 @@ class CinemaWindow(QMainWindow):
         self._folders_list.setPlaceholderText("One media folder per line, e.g.\n~/Cinema/Movies\n~/Cinema/TV")
         self._folders_list.setFixedHeight(110)
         self._folders_list.setStyleSheet(f"""
-            QPlainTextEdit {{ background: {COLORS['deep_navy']}; color: {COLORS['hd_white']};
-                border: 1px solid {COLORS['border']}; font-family: "{FONTS['mono']}"; font-size: {FONTS['size_sm']}px; }}
+            QPlainTextEdit {{ background: {glass_bg(100)}; color: {COLORS['hd_white']};
+                border: 1px solid {glass_edge()}; border-radius: 8px;
+                border-top: 1px solid {glass_sheen()};
+                font-family: "{FONTS['mono']}"; font-size: {FONTS['size_sm']}px; }}
             QPlainTextEdit:focus {{ border-color: {COLORS['seafoam']}; }}
         """)
         self._folders_list.setPlainText("\n".join(self._settings.media_folders))
@@ -519,7 +537,8 @@ class CinemaWindow(QMainWindow):
         save_btn.setStyleSheet(f"""
             QPushButton {{
                 background: {COLORS['seafoam']}; color: {COLORS['void_black']};
-                border: 1px solid {COLORS['seafoam']}; padding: 10px 30px;
+                border: 1px solid {COLORS['seafoam']}; border-radius: 8px;
+                padding: 10px 30px;
                 font-family: "{FONTS['mono']}"; font-size: {FONTS['size_md']}px; font-weight: bold;
             }}
             QPushButton:hover {{ background: {COLORS['seafoam_dim']}; }}

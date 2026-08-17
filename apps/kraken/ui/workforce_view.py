@@ -9,6 +9,19 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import QHeaderView, QTreeWidget, QTreeWidgetItem
 
+try:
+    from core.theme import COLORS, FONTS, glass_bg, glass_bg_dark, glass_edge, glass_sheen
+except ImportError:
+    COLORS = {}
+    FONTS = {}
+    def hex_to_rgba(h, a=255):
+        v = h.lstrip("#")
+        return f"rgba({int(v[0:2],16)},{int(v[2:4],16)},{int(v[4:6],16)},{a})"
+    def glass_bg(a=180): return hex_to_rgba(COLORS.get("slate_navy", "#0E2238"), a)
+    def glass_bg_dark(a=140): return hex_to_rgba(COLORS.get("deep_navy", "#050D14"), a)
+    def glass_edge(a=48): return hex_to_rgba(COLORS.get("seafoam", "#00F2C2"), a)
+    def glass_sheen(): return "rgba(238, 244, 248, 26)"
+
 STATUS_COLORS = {
     "running": "#00F2C2",
     "done": "#00C853",
@@ -44,14 +57,15 @@ class WorkforceTree(QTreeWidget):
         self.setStyleSheet(
             f"""
             QTreeWidget {{
-                background: {self._colors['slate_navy']};
+                background: {glass_bg(130)};
                 color: {self._colors['hd_white']};
-                border: none;
+                border: 1px solid {glass_edge()};
+                border-radius: 12px;
                 font-family: "{self._fonts['mono']}";
                 font-size: {self._fonts['size_sm']}px;
             }}
-            QTreeWidget::item {{ padding: 2px 4px; }}
-            QTreeWidget::item:selected {{ background: {self._colors['surface_selected']}; }}
+            QTreeWidget::item {{ padding: 2px 4px; border-radius: 6px; }}
+            QTreeWidget::item:selected {{ background: {self._colors['surface_selected']}; border-radius: 6px; }}
             """
         )
 

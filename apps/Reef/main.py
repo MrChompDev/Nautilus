@@ -35,7 +35,7 @@ from PySide6.QtWidgets import (  # noqa: E402
 
 from apps.Reef.engine import Account, MailStore, Message, fetch_inbox, send_mail  # noqa: E402
 from core.qt_env import setup_qt_environment  # noqa: E402
-from core.theme import COLORS, FONTS, SPACING  # noqa: E402
+from core.theme import COLORS, FONTS, SPACING, glass_bg, glass_bg_dark, glass_edge  # noqa: E402
 
 LOCAL_FOLDER = ("Local", "local")
 
@@ -116,27 +116,27 @@ class ComposeDialog(QDialog):
     def _apply_styles(self):
         self.setStyleSheet(f"""
             QDialog {{
-                background-color: {COLORS['slate_navy']};
+                background-color: {glass_bg()};
                 color: {COLORS['hd_white']};
                 font-family: "{FONTS['ui']}";
                 font-size: {FONTS['size_md']}px;
             }}
             QLabel {{ color: {COLORS['text_secondary']}; }}
             QLineEdit, QPlainTextEdit {{
-                background-color: {COLORS['void_black']};
+                background-color: {glass_bg_dark()};
                 color: {COLORS['hd_white']};
-                border: 1px solid {COLORS['border']};
+                border: 1px solid {glass_edge()};
                 border-radius: 4px;
                 padding: 6px;
             }}
             QPushButton {{
-                background-color: {COLORS['seafoam_deep']};
+                background-color: {glass_bg_dark()};
                 color: {COLORS['hd_white']};
-                border: none;
+                border: 1px solid {glass_edge()};
                 border-radius: 4px;
                 padding: 6px 16px;
             }}
-            QPushButton:hover {{ background-color: {COLORS['seafoam']}; color: {COLORS['void_black']}; }}
+            QPushButton:hover {{ background-color: {glass_edge()}; color: {COLORS['hd_white']}; }}
         """)
 
 
@@ -185,36 +185,36 @@ class AccountDialog(QDialog):
 
         self.setStyleSheet(f"""
             QDialog {{
-                background-color: {COLORS['slate_navy']};
+                background-color: {glass_bg()};
                 color: {COLORS['hd_white']};
                 font-family: "{FONTS['ui']}";
                 font-size: {FONTS['size_md']}px;
             }}
             QLabel {{ color: {COLORS['text_secondary']}; }}
             QLineEdit {{
-                background-color: {COLORS['void_black']};
+                background-color: {glass_bg_dark()};
                 color: {COLORS['hd_white']};
-                border: 1px solid {COLORS['border']};
+                border: 1px solid {glass_edge()};
                 border-radius: 4px;
                 padding: 6px;
             }}
             QPushButton {{
-                background-color: {COLORS['seafoam_deep']};
+                background-color: {glass_bg_dark()};
                 color: {COLORS['hd_white']};
-                border: none;
+                border: 1px solid {glass_edge()};
                 border-radius: 4px;
                 padding: 6px 16px;
             }}
-            QPushButton:hover {{ background-color: {COLORS['seafoam']}; color: {COLORS['void_black']}; }}
+            QPushButton:hover {{ background-color: {glass_edge()}; color: {COLORS['hd_white']}; }}
         """)
 
 
 def _input_style():
     return f"""
         QPlainTextEdit, QLineEdit {{
-            background-color: {COLORS['void_black']};
+            background-color: {glass_bg_dark()};
             color: {COLORS['hd_white']};
-            border: 1px solid {COLORS['border']};
+            border: 1px solid {glass_edge()};
             border-radius: 4px;
             font-family: "{FONTS['mono']}";
             font-size: {FONTS['size_sm']}px;
@@ -244,7 +244,7 @@ class ReefWindow(QMainWindow):
         self.setCentralWidget(central)
         central.setStyleSheet(f"""
             QWidget {{
-                background-color: {COLORS['abyss_navy']};
+                background-color: {glass_bg_dark()};
                 color: {COLORS['hd_white']};
                 font-family: "{FONTS['ui']}";
                 font-size: {FONTS['size_md']}px;
@@ -305,10 +305,10 @@ class ReefWindow(QMainWindow):
         self.viewer.setOpenExternalLinks(True)
         self.viewer.setStyleSheet(f"""
             QTextBrowser {{
-                background-color: {COLORS['void_black']};
+                background-color: {glass_bg()};
                 color: {COLORS['hd_white']};
-                border: 1px solid {COLORS['border']};
-                border-radius: 4px;
+                border: 1px solid {glass_edge()};
+                border-radius: 6px;
                 padding: {SPACING['md']}px;
                 font-family: "{FONTS['ui']}";
                 font-size: {FONTS['size_md']}px;
@@ -594,10 +594,10 @@ def _html_escape(text: str) -> str:
 def _pane_style():
     return f"""
         QListWidget {{
-            background-color: {COLORS['void_black']};
+            background-color: {glass_bg()};
             color: {COLORS['hd_white']};
-            border: 1px solid {COLORS['border']};
-            border-radius: 4px;
+            border: 1px solid {glass_edge()};
+            border-radius: 6px;
             font-family: "{FONTS['ui']}";
             font-size: {FONTS['size_md']}px;
             padding: 4px;
@@ -607,22 +607,23 @@ def _pane_style():
             border-radius: 4px;
         }}
         QListWidget::item:hover {{
-            background-color: {COLORS['surface_hover']};
+            background-color: {glass_bg_dark()};
         }}
         QListWidget::item:selected {{
-            background-color: {COLORS['seafoam_deep']};
-            color: {COLORS['hd_white']};
+            background-color: {glass_bg_dark()};
+            color: {COLORS['seafoam']};
+            border: 1px solid {glass_edge()};
         }}
         QPushButton {{
-            background-color: {COLORS['slate_navy']};
+            background-color: {glass_bg()};
             color: {COLORS['seafoam']};
-            border: 1px solid {COLORS['border']};
+            border: 1px solid {glass_edge()};
             border-radius: 4px;
             padding: 6px 10px;
             font-family: "{FONTS['ui']}";
             font-size: {FONTS['size_sm']}px;
         }}
-        QPushButton:hover {{ background-color: {COLORS['seafoam_deep']}; }}
+        QPushButton:hover {{ background-color: {glass_bg_dark()}; }}
         QPushButton:disabled {{ color: {COLORS['text_muted']}; }}
     """
 

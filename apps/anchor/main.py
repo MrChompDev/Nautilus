@@ -47,6 +47,10 @@ try:
         SPACING,
         create_nautilus_palette,
         get_global_stylesheet,
+        glass_bg,
+        glass_bg_dark,
+        glass_edge,
+        glass_sheen,
     )
 except ImportError:
     wallpapers = None
@@ -62,6 +66,13 @@ except ImportError:
     SPACING = {"xs": 2, "sm": 4, "md": 8, "lg": 12, "xl": 16, "xxl": 24}
     def get_global_stylesheet(): return ""
     def create_nautilus_palette(): return QPalette()
+    def hex_to_rgba(h, a=255):
+        v = h.lstrip("#")
+        return f"rgba({int(v[0:2],16)},{int(v[2:4],16)},{int(v[4:6],16)},{a})"
+    def glass_bg(a=180): return hex_to_rgba(COLORS["slate_navy"], a)
+    def glass_bg_dark(a=140): return hex_to_rgba(COLORS["deep_navy"], a)
+    def glass_edge(a=48): return hex_to_rgba(COLORS["seafoam"], a)
+    def glass_sheen(): return "rgba(238, 244, 248, 26)"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -72,9 +83,14 @@ def make_group(title: str) -> QGroupBox:
     gb = QGroupBox(title)
     gb.setStyleSheet(f"""
         QGroupBox {{
-            border: 1px solid {COLORS['border']};
-            margin-top: 14px;
-            padding-top: 18px;
+            background: {glass_bg(60)};
+            border: 1px solid {glass_edge()};
+            border-radius: 18px;
+            margin-top: 16px;
+            padding-top: 20px;
+            padding-left: 8px;
+            padding-right: 8px;
+            padding-bottom: 8px;
             font-family: "{FONTS['mono']}";
             font-size: {FONTS['size_sm']}px;
             font-weight: bold;
@@ -82,8 +98,8 @@ def make_group(title: str) -> QGroupBox:
         }}
         QGroupBox::title {{
             subcontrol-origin: margin;
-            left: 10px;
-            padding: 0 6px;
+            left: 12px;
+            padding: 0 8px;
             color: {COLORS['seafoam']};
         }}
     """)
@@ -907,6 +923,7 @@ class AnchorWindow(QMainWindow):
     def _setup_ui(self):
         central = QWidget()
         self.setCentralWidget(central)
+        central.setStyleSheet(f"QWidget {{ background: {glass_bg(180)}; }}")
         main_layout = QVBoxLayout(central)
         main_layout.setContentsMargins(SPACING["md"], SPACING["md"], SPACING["md"], SPACING["md"])
         main_layout.setSpacing(SPACING["sm"])
@@ -916,7 +933,7 @@ class AnchorWindow(QMainWindow):
         title.setStyleSheet(f"""
             color: {COLORS['seafoam']}; font-family: "{FONTS['mono']}";
             font-size: {FONTS['size_lg']}px; font-weight: bold; letter-spacing: 2px;
-            padding-bottom: 4px; border-bottom: 1px solid {COLORS['border']};
+            padding-bottom: 4px; border-bottom: 1px solid {glass_edge()};
         """)
         main_layout.addWidget(title)
 
@@ -924,27 +941,31 @@ class AnchorWindow(QMainWindow):
         tabs = QTabWidget()
         tabs.setStyleSheet(f"""
             QTabWidget::pane {{
-                border: 1px solid {COLORS['border']};
-                background-color: {COLORS['abyss_navy']};
+                background: {glass_bg(160)};
+                border: 1px solid {glass_edge()};
+                border-radius: 18px;
             }}
             QTabBar::tab {{
-                background-color: {COLORS['tab_inactive']};
+                background: {glass_bg_dark(120)};
                 color: {COLORS['text_secondary']};
                 padding: 6px 16px;
-                border: none;
+                border: 1px solid transparent;
                 border-bottom: 2px solid transparent;
+                border-radius: 8px;
                 font-family: "{FONTS['mono']}";
                 font-size: {FONTS['size_sm']}px;
                 min-width: 80px;
             }}
             QTabBar::tab:selected {{
-                background-color: {COLORS['tab_active']};
+                background: {glass_bg(180)};
                 color: {COLORS['seafoam']};
                 border-bottom: 2px solid {COLORS['seafoam']};
+                border-color: {glass_edge()};
             }}
             QTabBar::tab:hover:!selected {{
-                background-color: {COLORS['surface_hover']};
+                background: {glass_bg(150)};
                 color: {COLORS['hd_white']};
+                border-color: {glass_edge(30)};
             }}
         """)
 
@@ -964,15 +985,17 @@ class AnchorWindow(QMainWindow):
         apply_all = QPushButton("Apply All Settings")
         apply_all.setStyleSheet(f"""
             QPushButton {{
-                background: {COLORS['seafoam_deep']};
+                background: {glass_bg(160)};
                 color: {COLORS['seafoam']};
-                border: 1px solid {COLORS['seafoam']};
-                padding: 6px 20px;
+                border: 1px solid {glass_edge(120)};
+                border-radius: 8px;
+                padding: 8px 24px;
                 font-family: "{FONTS['mono']}";
                 font-size: {FONTS['size_sm']}px;
                 font-weight: bold;
             }}
-            QPushButton:hover {{ background: {COLORS['seafoam']}; color: {COLORS['void_black']}; }}
+            QPushButton:hover {{ background: {glass_bg(210)}; border: 1px solid {glass_edge(160)}; }}
+            QPushButton:pressed {{ background: {COLORS['seafoam_deep']}; }}
         """)
         apply_all.clicked.connect(lambda: QMessageBox.information(self, "Settings", "Settings applied successfully."))
         bottom.addStretch()

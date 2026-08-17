@@ -1,7 +1,13 @@
 """
 Surfline Theme - Deep Ocean Industrial
-Dense, atmospheric, oceanic. Flat edges, no frills.
+Dense, atmospheric, oceanic. Glassmorphism surfaces.
 """
+
+try:
+    from core import theme as _core_theme  # noqa: F401
+    _HAS_CORE = True
+except ImportError:
+    _HAS_CORE = False
 
 COLORS = {
     "bg_primary": "#060E1A",
@@ -64,6 +70,21 @@ FONTS = {
     "size_xl": 14,
 }
 
+def _hex_to_rgba(h, a=255):
+    v = h.lstrip("#")
+    return f"rgba({int(v[0:2],16)},{int(v[2:4],16)},{int(v[4:6],16)},{a})"
+
+def _glass_bg(a=180): return _hex_to_rgba(COLORS.get("bg_secondary", "#0E2238"), a)
+def _glass_bg_dark(a=140): return _hex_to_rgba(COLORS.get("bg_primary", "#081626"), a)
+def _glass_bg_heavy(a=220): return _hex_to_rgba(COLORS.get("bg_secondary", "#0E2238"), a)
+def _glass_edge(a=48): return _hex_to_rgba(COLORS.get("biolum", "#00F2C2"), a)
+def _glass_sheen(): return "rgba(238, 244, 248, 26)"
+
+_R_SM = "8px"
+_R_MD = "12px"
+_R_LG = "18px"
+
+
 def get_stylesheet():
     return f"""
     * {{
@@ -81,30 +102,32 @@ def get_stylesheet():
     }}
 
     QTabWidget::pane {{
-        border: 1px solid {COLORS['border']};
-        background: {COLORS['bg_primary']};
+        border: 1px solid {_glass_edge()};
+        background: {_glass_bg(160)};
+        border-radius: {_R_LG};
     }}
 
     QTabBar::tab {{
-        background: {COLORS['tab_inactive']};
+        background: {_glass_bg_dark(120)};
         color: {COLORS['text_secondary']};
         padding: 4px 12px;
         margin-right: 1px;
-        border: none;
+        border: 1px solid transparent;
         border-bottom: 2px solid transparent;
+        border-radius: {_R_SM};
         min-width: 80px;
         max-width: 200px;
         height: 28px;
     }}
 
     QTabBar::tab:selected {{
-        background: {COLORS['tab_active']};
+        background: {_glass_bg(180)};
         color: {COLORS['accent']};
         border-bottom: 2px solid {COLORS['accent']};
     }}
 
     QTabBar::tab:hover:!selected {{
-        background: {COLORS['tab_hover']};
+        background: {_glass_bg(150)};
         color: {COLORS['text_primary']};
     }}
 
@@ -112,6 +135,7 @@ def get_stylesheet():
         image: none;
         subcontrol-position: right;
         padding: 2px;
+        border-radius: 8px;
     }}
 
     QTabBar::close-button:hover {{
@@ -119,9 +143,10 @@ def get_stylesheet():
     }}
 
     QLineEdit {{
-        background: {COLORS['bg_input']};
+        background: {_glass_bg_dark(120)};
         color: {COLORS['text_primary']};
-        border: 1px solid {COLORS['border']};
+        border: 1px solid {_glass_edge(60)};
+        border-radius: {_R_SM};
         padding: 3px 8px;
         selection-background-color: {COLORS['selection']};
         font-family: "{FONTS['mono']}", "{FONTS['fallback_mono']}";
@@ -133,35 +158,38 @@ def get_stylesheet():
     }}
 
     QPushButton {{
-        background: {COLORS['bg_elevated']};
+        background: {_glass_bg(140)};
         color: {COLORS['text_primary']};
-        border: 1px solid {COLORS['border']};
+        border: 1px solid {_glass_edge(70)};
+        border-radius: {_R_SM};
         padding: 3px 10px;
         min-width: 24px;
         min-height: 20px;
     }}
 
     QPushButton:hover {{
-        background: {COLORS['border']};
-        border-color: {COLORS['accent_dim']};
+        background: {_glass_bg(190)};
+        border-color: {_glass_edge(100)};
     }}
 
     QPushButton:pressed {{
-        background: {COLORS['accent_darker']};
-        color: {COLORS['bg_primary']};
+        background: {_glass_bg_dark(200)};
+        border-color: {_glass_edge(120)};
+        color: {COLORS['accent']};
     }}
 
     QToolButton {{
         background: transparent;
         color: {COLORS['text_secondary']};
         border: none;
+        border-radius: {_R_SM};
         padding: 2px 6px;
         font-size: {FONTS['size_lg']}px;
     }}
 
     QToolButton:hover {{
         color: {COLORS['accent']};
-        background: {COLORS['bg_elevated']};
+        background: {_glass_bg(130)};
     }}
 
     QToolButton:pressed {{
@@ -169,18 +197,21 @@ def get_stylesheet():
     }}
 
     QScrollBar:vertical {{
-        background: {COLORS['scrollbar_bg']};
-        width: 6px;
-        margin: 0;
+        background: transparent;
+        width: 8px;
+        margin: 2px;
     }}
 
     QScrollBar::handle:vertical {{
-        background: {COLORS['scrollbar_handle']};
+        background: {_hex_to_rgba(COLORS['scrollbar_handle'], 180)};
         min-height: 20px;
+        border-radius: 5px;
+        border: 2px solid transparent;
     }}
 
     QScrollBar::handle:vertical:hover {{
-        background: {COLORS['accent_darker']};
+        background: {_hex_to_rgba(COLORS['accent_darker'], 220)};
+        border: 2px solid transparent;
     }}
 
     QScrollBar::add-line:vertical,
@@ -189,18 +220,21 @@ def get_stylesheet():
     }}
 
     QScrollBar:horizontal {{
-        background: {COLORS['scrollbar_bg']};
-        height: 6px;
-        margin: 0;
+        background: transparent;
+        height: 8px;
+        margin: 2px;
     }}
 
     QScrollBar::handle:horizontal {{
-        background: {COLORS['scrollbar_handle']};
+        background: {_hex_to_rgba(COLORS['scrollbar_handle'], 180)};
         min-width: 20px;
+        border-radius: 5px;
+        border: 2px solid transparent;
     }}
 
     QScrollBar::handle:horizontal:hover {{
-        background: {COLORS['accent_darker']};
+        background: {_hex_to_rgba(COLORS['accent_darker'], 220)};
+        border: 2px solid transparent;
     }}
 
     QScrollBar::add-line:horizontal,
@@ -209,10 +243,11 @@ def get_stylesheet():
     }}
 
     QMenu {{
-        background: {COLORS['bg_secondary']};
+        background: {_glass_bg_heavy(230)};
         color: {COLORS['text_primary']};
-        border: 1px solid {COLORS['border']};
-        padding: 2px 0px;
+        border: 1px solid {_glass_edge()};
+        border-radius: {_R_MD};
+        padding: 4px 0px;
     }}
 
     QMenu::item {{
@@ -220,26 +255,26 @@ def get_stylesheet():
     }}
 
     QMenu::item:selected {{
-        background: {COLORS['accent_darker']};
-        color: {COLORS['text_primary']};
+        background: {_hex_to_rgba(COLORS['accent_darker'], 180)};
+        color: {COLORS['accent']};
     }}
 
     QMenu::separator {{
         height: 1px;
-        background: {COLORS['border']};
-        margin: 2px 0px;
+        background: {_glass_edge()};
+        margin: 2px 8px;
     }}
 
     QSplitter::handle {{
-        background: {COLORS['border']};
+        background: {_glass_edge(40)};
     }}
 
     QSplitter::handle:horizontal {{
-        width: 2px;
+        width: 3px;
     }}
 
     QSplitter::handle:vertical {{
-        height: 2px;
+        height: 3px;
     }}
 
     QLabel {{
@@ -247,9 +282,10 @@ def get_stylesheet():
     }}
 
     QComboBox {{
-        background: {COLORS['bg_input']};
+        background: {_glass_bg_dark(130)};
         color: {COLORS['text_primary']};
-        border: 1px solid {COLORS['border']};
+        border: 1px solid {_glass_edge(60)};
+        border-radius: {_R_SM};
         padding: 3px 8px;
     }}
 
@@ -263,45 +299,50 @@ def get_stylesheet():
     }}
 
     QComboBox QAbstractItemView {{
-        background: {COLORS['bg_secondary']};
+        background: {_glass_bg_heavy(240)};
         color: {COLORS['text_primary']};
-        border: 1px solid {COLORS['border']};
-        selection-background-color: {COLORS['accent_darker']};
+        border: 1px solid {_glass_edge()};
+        border-radius: {_R_MD};
+        selection-background-color: {_hex_to_rgba(COLORS['accent_darker'], 180)};
     }}
 
     QStatusBar {{
-        background: {COLORS['bg_secondary']};
+        background: {_glass_bg(170)};
         color: {COLORS['text_secondary']};
-        border-top: 1px solid {COLORS['border']};
+        border-top: 1px solid {_glass_edge()};
         font-size: {FONTS['size_sm']}px;
         font-family: "{FONTS['mono']}", "{FONTS['fallback_mono']}";
     }}
 
     QProgressBar {{
-        background: {COLORS['bg_input']};
-        border: none;
+        background: {_glass_bg_dark(100)};
+        border: 1px solid {_glass_edge(50)};
+        border-radius: 4px;
         text-align: center;
         color: {COLORS['text_primary']};
-        height: 2px;
+        height: 4px;
     }}
 
     QProgressBar::chunk {{
         background: {COLORS['accent']};
+        border-radius: 3px;
     }}
 
     QToolTip {{
-        background: {COLORS['bg_elevated']};
+        background: {_glass_bg_heavy(240)};
         color: {COLORS['text_primary']};
-        border: 1px solid {COLORS['accent']};
+        border: 1px solid {_glass_edge()};
+        border-radius: {_R_SM};
         padding: 4px;
         font-family: "{FONTS['mono']}", "{FONTS['fallback_mono']}";
         font-size: {FONTS['size_sm']}px;
     }}
 
     QTextEdit {{
-        background: {COLORS['terminal_bg']};
+        background: {_hex_to_rgba(COLORS['terminal_bg'], 200)};
         color: {COLORS['terminal_text']};
-        border: 1px solid {COLORS['border']};
+        border: 1px solid {_glass_edge(60)};
+        border-radius: {_R_MD};
         font-family: "{FONTS['mono']}", "{FONTS['fallback_mono']}";
         font-size: {FONTS['size_sm']}px;
         padding: 4px;

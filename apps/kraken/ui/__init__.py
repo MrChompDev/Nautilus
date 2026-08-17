@@ -1,1 +1,1 @@
-"""Kraken AI — desktop UI package."""
+"""Kraken AI — desktop UI."""

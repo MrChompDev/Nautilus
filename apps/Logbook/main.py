@@ -44,6 +44,10 @@ try:
         SPACING,
         create_nautilus_palette,
         get_global_stylesheet,
+        glass_bg,
+        glass_bg_dark,
+        glass_edge,
+        glass_sheen,
     )
 except ImportError:
     COLORS = {
@@ -59,6 +63,14 @@ except ImportError:
 
     def get_global_stylesheet(): return ""
     def create_nautilus_palette(): return QPalette()
+
+    def hex_to_rgba(h, a=255):
+        v = h.lstrip("#")
+        return f"rgba({int(v[0:2],16)},{int(v[2:4],16)},{int(v[4:6],16)},{a})"
+    def glass_bg(a=180): return hex_to_rgba(COLORS["slate_navy"], a)
+    def glass_bg_dark(a=140): return hex_to_rgba(COLORS["deep_navy"], a)
+    def glass_edge(a=48): return hex_to_rgba(COLORS["seafoam"], a)
+    def glass_sheen(): return "rgba(238, 244, 248, 26)"
 
 APP_DIR = os.path.join(os.path.expanduser("~"), "Documents", "Logbook")
 FILENAME_CHARS = re.compile(r'[<>:"/\\|?*\x00-\x1f]')
@@ -158,11 +170,11 @@ def _render_markdown(text: str) -> str:
         "<style>"
         "body{color:" + COLORS["hd_white"] + ";font-family:'JetBrains Mono',Consolas,monospace;font-size:14px;line-height:1.7;}"
         "h1,h2,h3{color:" + COLORS["seafoam"] + ";margin-top:22px;}"
-        "h1{font-size:24px;border-bottom:1px solid " + COLORS["border"] + ";padding-bottom:6px;}"
+        "h1{font-size:24px;border-bottom:1px solid " + glass_edge() + ";padding-bottom:6px;}"
         "li{color:" + COLORS["text_secondary"] + ";}"
-        "hr{border:0;border-top:1px solid " + COLORS["border"] + ";}"
-        "pre.code{background:" + COLORS["deep_navy"] + ";padding:12px;color:" + COLORS["amber"] + ";border:1px solid "
-        + COLORS["border"] + ";overflow:auto;}"
+        "hr{border:0;border-top:1px solid " + glass_edge() + ";}"
+        "pre.code{background:" + glass_bg_dark(160) + ";padding:12px;color:" + COLORS["amber"] + ";border:1px solid "
+        + glass_edge() + ";overflow:auto;}"
         "p{color:" + COLORS["text_secondary"] + ";}"
         "</style><body>" + body + "</body>"
     )
@@ -199,7 +211,7 @@ class LogbookWindow(QMainWindow):
                                    f"font-family: '{FONTS['mono']}'; font-size: {FONTS['size_sm']}px;")
 
         root = QWidget()
-        root.setStyleSheet(f"background: {COLORS['abyss_navy']};")
+        root.setStyleSheet(f"background: {glass_bg_dark()};")
         self.setCentralWidget(root)
         outer = QVBoxLayout(root)
         outer.setContentsMargins(0, 0, 0, 0)
@@ -207,7 +219,7 @@ class LogbookWindow(QMainWindow):
 
         # ── Top bar ──
         top = QWidget()
-        top.setStyleSheet(f"background: {COLORS['void_black']}; border-bottom: 1px solid {COLORS['border']};")
+        top.setStyleSheet(f"background: {glass_bg(200)}; border-bottom: 1px solid {glass_edge()};")
         top.setFixedHeight(52)
         top_lay = QHBoxLayout(top)
         top_lay.setContentsMargins(SPACING["lg"], 0, SPACING["lg"], 0)
@@ -234,23 +246,23 @@ class LogbookWindow(QMainWindow):
         # ── Splitter: notes list | editor | preview ──
         self._splitter = QSplitter(Qt.Horizontal)
         self._splitter.setHandleWidth(1)
-        self._splitter.setStyleSheet(f"QSplitter::handle {{ background: {COLORS['border']}; }}")
+        self._splitter.setStyleSheet(f"QSplitter::handle {{ background: {glass_edge()}; }}")
 
         # Left: note list
         left = QWidget()
-        left.setStyleSheet(f"background: {COLORS['deep_navy']};")
+        left.setStyleSheet(f"background: {glass_bg_dark(160)};")
         left_lay = QVBoxLayout(left)
         left_lay.setContentsMargins(0, 0, 0, 0)
         left_lay.setSpacing(0)
 
         list_header = QLabel("  NOTES")
         list_header.setStyleSheet(f"color: {COLORS['text_muted']}; font-family: '{FONTS['mono']}'; "
-                                  f"font-size: {FONTS['size_xs']}px; padding: 6px 0; background: {COLORS['deep_navy']}; letter-spacing: 1px;")
+                                   f"font-size: {FONTS['size_xs']}px; padding: 6px 0; background: {glass_bg_dark(160)}; letter-spacing: 1px;")
         left_lay.addWidget(list_header)
 
         self._notes_list = QListWidget()
         self._notes_list.setStyleSheet(f"""
-            QListWidget {{ background: {COLORS['deep_navy']}; border: none; color: {COLORS['hd_white']};
+            QListWidget {{ background: {glass_bg_dark(160)}; border: none; color: {COLORS['hd_white']};
                 font-family: "{FONTS['mono']}"; font-size: {FONTS['size_sm']}px; }}
             QListWidget::item {{ padding: 8px 10px; border-left: 3px solid transparent; }}
             QListWidget::item:selected {{ background: {COLORS['surface_selected']}; border-left: 3px solid {COLORS['seafoam']}; }}
@@ -265,8 +277,8 @@ class LogbookWindow(QMainWindow):
         self._editor = QTextEdit()
         self._editor.setPlaceholderText("Write markdown here…\n\n# Title\n\n## Section\n\n- bullet\n\n```python\nprint('hi')\n```")
         self._editor.setStyleSheet(f"""
-            QTextEdit {{ background: {COLORS['abyss_navy']}; color: {COLORS['hd_white']};
-                border: none; border-right: 1px solid {COLORS['border']};
+            QTextEdit {{ background: {glass_bg()}; color: {COLORS['hd_white']};
+                border: none; border-right: 1px solid {glass_edge()};
                 font-family: "{FONTS['mono']}"; font-size: {FONTS['size_md']}px;
                 padding: {SPACING['xl']}px; selection-background-color: {COLORS['surface_selected']}; }}
         """)
@@ -275,14 +287,14 @@ class LogbookWindow(QMainWindow):
 
         # Right: preview
         right = QWidget()
-        right.setStyleSheet(f"background: {COLORS['abyss_navy']};")
+        right.setStyleSheet(f"background: {glass_bg()};")
         right_lay = QVBoxLayout(right)
         right_lay.setContentsMargins(0, 0, 0, 0)
         right_lay.setSpacing(0)
         self._preview = QTextEdit()
         self._preview.setReadOnly(True)
         self._preview.setStyleSheet(f"""
-            QTextEdit {{ background: {COLORS['abyss_navy']}; color: {COLORS['text_secondary']};
+            QTextEdit {{ background: {glass_bg()}; color: {COLORS['text_secondary']};
                 border: none; padding: {SPACING['xl']}px; }}
         """)
         right_lay.addWidget(self._preview)
@@ -298,8 +310,8 @@ class LogbookWindow(QMainWindow):
 
     def _input_style(self) -> str:
         return f"""
-            QLineEdit {{ background: {COLORS['deep_navy']}; color: {COLORS['hd_white']};
-                border: 1px solid {COLORS['border']}; padding: 6px 10px;
+            QLineEdit {{ background: {glass_bg()}; color: {COLORS['hd_white']};
+                border: 1px solid {glass_edge()}; padding: 6px 10px;
                 font-family: "{FONTS['mono']}"; font-size: {FONTS['size_sm']}px; }}
             QLineEdit:focus {{ border-color: {COLORS['seafoam']}; }}
         """
@@ -308,8 +320,8 @@ class LogbookWindow(QMainWindow):
         btn = QPushButton(text)
         btn.setCursor(Qt.PointingHandCursor)
         btn.setStyleSheet(f"""
-            QPushButton {{ background: {COLORS['slate_navy']}; color: {COLORS['seafoam']};
-                border: 1px solid {COLORS['seafoam']}; padding: 6px 14px;
+            QPushButton {{ background: {glass_bg()}; color: {COLORS['seafoam']};
+                border: 1px solid {glass_edge()}; padding: 6px 14px;
                 font-family: "{FONTS['mono']}"; font-size: {FONTS['size_sm']}px; }}
             QPushButton:hover {{ background: {COLORS['seafoam_deep']}; }}
         """)

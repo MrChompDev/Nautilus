@@ -1,9 +1,10 @@
 """
 Kraken AI — local custom model runtime.
 
-Loads the Nautilus from-scratch models (coding / writing / pentest) and serves
-them through the same streaming ChatClient interface as every other provider,
-so the GUI, CLI, and agents treat them uniformly. No network, no API keys.
+Loads the sea-creature named models (kraken / leviathan / megalodon / charybdis)
+and serves them through the same streaming ChatClient interface as every other
+provider, so the GUI, CLI, and agents treat them uniformly.  No network, no API
+keys.
 """
 
 import os
@@ -134,7 +135,7 @@ def local_stream(
 ):
     """Generate a response from a local model, yielding text deltas."""
     lm = load_lm(model_id)
-    if model_id == "coding" and workspace is not None:
+    if model_id == "kraken" and workspace is not None:
         messages = with_brain_system(messages, workspace)
     prompt = format_messages(messages)
 

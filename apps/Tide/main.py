@@ -55,6 +55,10 @@ try:
         SPACING,
         create_nautilus_palette,
         get_global_stylesheet,
+        glass_bg,
+        glass_bg_dark,
+        glass_edge,
+        glass_sheen,
     )
 except ImportError:
     COLORS = {
@@ -78,6 +82,13 @@ except ImportError:
         return ""
     def create_nautilus_palette():
         return QPalette()
+    def hex_to_rgba(h, a=255):
+        v = h.lstrip("#")
+        return f"rgba({int(v[0:2],16)},{int(v[2:4],16)},{int(v[4:6],16)},{a})"
+    def glass_bg(a=180): return hex_to_rgba(COLORS["slate_navy"], a)
+    def glass_bg_dark(a=140): return hex_to_rgba(COLORS["deep_navy"], a)
+    def glass_edge(a=48): return hex_to_rgba(COLORS["seafoam"], a)
+    def glass_sheen(): return "rgba(238, 244, 248, 26)"
 
 
 # Output styles -> theme color keys
@@ -151,12 +162,13 @@ class TerminalSession(QWidget):
         self._display.setReadOnly(True)
         self._display.setStyleSheet(f"""
             QTextEdit {{
-                background-color: {COLORS['terminal_bg']};
+                background: rgba(3, 8, 16, 210);
                 color: {COLORS['terminal_fg']};
-                border: none;
+                border: 1px solid {glass_edge(40)};
+                border-radius: 12px;
                 font-family: "{FONTS['mono']}", "Consolas", monospace;
                 font-size: {FONTS['size_sm']}px;
-                padding: 4px;
+                padding: 6px;
                 selection-background-color: {COLORS['seafoam_deep']};
                 selection-color: {COLORS['terminal_fg']};
             }}
@@ -174,8 +186,9 @@ class TerminalSession(QWidget):
                 font-family: "{FONTS['mono']}", "Consolas";
                 font-size: {FONTS['size_sm']}px;
                 font-weight: bold;
-                padding: 3px 6px;
-                background-color: {COLORS['void_black']};
+                padding: 4px 8px;
+                background: {glass_bg_dark(160)};
+                border-radius: 8px 0 0 8px;
             }}
         """)
         input_layout.addWidget(self._prompt)
@@ -183,12 +196,18 @@ class TerminalSession(QWidget):
         self._input = QLineEdit()
         self._input.setStyleSheet(f"""
             QLineEdit {{
-                background-color: {COLORS['void_black']};
+                background: {glass_bg_dark(160)};
                 color: {COLORS['hd_white']};
-                border: none;
+                border: 1px solid {glass_edge(40)};
+                border-left: none;
+                border-radius: 0 8px 8px 0;
                 font-family: "{FONTS['mono']}", "Consolas", monospace;
                 font-size: {FONTS['size_sm']}px;
-                padding: 3px 6px;
+                padding: 4px 8px;
+            }}
+            QLineEdit:focus {{
+                border: 1px solid {COLORS['seafoam']};
+                border-left: none;
             }}
         """)
         self._input.returnPressed.connect(self._execute)
@@ -310,6 +329,7 @@ class TideWindow(QMainWindow):
     def _setup_ui(self):
         central = QWidget()
         self.setCentralWidget(central)
+        central.setStyleSheet(f"QWidget {{ background: {glass_bg(180)}; }}")
         main_layout = QVBoxLayout(central)
         main_layout.setContentsMargins(SPACING["md"], SPACING["md"], SPACING["md"], SPACING["md"])
         main_layout.setSpacing(SPACING["sm"])
@@ -320,6 +340,7 @@ class TideWindow(QMainWindow):
         title.setStyleSheet(f"""
             color: {COLORS['seafoam']}; font-family: "{FONTS['mono']}";
             font-size: {FONTS['size_lg']}px; font-weight: bold; letter-spacing: 2px;
+            background: transparent;
         """)
         title_bar.addWidget(title)
         title_bar.addStretch()
@@ -328,12 +349,13 @@ class TideWindow(QMainWindow):
         self._new_tab_btn.setFixedSize(28, 24)
         self._new_tab_btn.setStyleSheet(f"""
             QPushButton {{
-                background-color: {COLORS['slate_navy']};
+                background: {glass_bg(140)};
                 color: {COLORS['seafoam']};
-                border: 1px solid {COLORS['border']};
+                border: 1px solid {glass_edge(60)};
+                border-radius: 8px;
                 font-size: 16px; font-weight: bold;
             }}
-            QPushButton:hover {{ background-color: {COLORS['seafoam_deep']}; }}
+            QPushButton:hover {{ background: {glass_bg(200)}; border-color: {glass_edge(100)}; }}
         """)
         self._new_tab_btn.clicked.connect(self._add_tab)
         title_bar.addWidget(self._new_tab_btn)
@@ -346,28 +368,32 @@ class TideWindow(QMainWindow):
         self._tab_widget.tabCloseRequested.connect(self._close_tab)
         self._tab_widget.setStyleSheet(f"""
             QTabWidget::pane {{
-                border: 1px solid {COLORS['border']};
-                background-color: {COLORS['terminal_bg']};
+                background: {glass_bg_dark(180)};
+                border: 1px solid {glass_edge()};
+                border-radius: 12px;
             }}
             QTabBar::tab {{
-                background-color: {COLORS['tab_inactive']};
+                background: {glass_bg_dark(120)};
                 color: {COLORS['text_secondary']};
-                padding: 4px 12px;
-                border: none;
+                padding: 5px 14px;
+                border: 1px solid transparent;
                 border-bottom: 2px solid transparent;
+                border-radius: 8px;
                 font-family: "{FONTS['mono']}";
                 font-size: {FONTS['size_xs']}px;
                 min-width: 60px;
-                height: 24px;
+                height: 26px;
             }}
             QTabBar::tab:selected {{
-                background-color: {COLORS['tab_active']};
+                background: {glass_bg(180)};
                 color: {COLORS['seafoam']};
                 border-bottom: 2px solid {COLORS['seafoam']};
+                border-color: {glass_edge()};
             }}
             QTabBar::tab:hover:!selected {{
-                background-color: {COLORS['surface_hover']};
+                background: {glass_bg(150)};
                 color: {COLORS['hd_white']};
+                border-color: {glass_edge(30)};
             }}
         """)
 
@@ -382,7 +408,8 @@ class TideWindow(QMainWindow):
         status.setStyleSheet(f"""
             color: {COLORS['text_muted']}; font-family: "{FONTS['mono']}";
             font-size: {FONTS['size_xs']}px; padding-top: 4px;
-            border-top: 1px solid {COLORS['border']};
+            border-top: 1px solid {glass_edge()};
+            background: transparent;
         """)
         main_layout.addWidget(status)
 

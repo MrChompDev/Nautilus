@@ -1,7 +1,18 @@
 """Riptide Audio - PySide6 Theme & Colors"""
 from __future__ import annotations
 
-from core.theme import COLORS
+from core.theme import (
+    COLORS,
+    RADIUS_LG,
+    RADIUS_MD,
+    RADIUS_SM,
+    glass_bg,
+    glass_bg_dark,
+    glass_bg_heavy,
+    glass_edge,
+    glass_sheen,
+    hex_to_rgba,
+)
 
 
 class Colors:
@@ -26,6 +37,11 @@ class Colors:
     YOUTUBE = COLORS["text_secondary"]  # placeholder - use YouTube logo color
     SOUNDCLOUD = COLORS["text_secondary"]  # placeholder - use SoundCloud logo color
 
+    glass_bg = glass_bg(170)
+    glass_bg_dark = glass_bg_dark(140)
+    glass_edge = glass_edge()
+    glass_sheen = glass_sheen()
+
 
 def hex_to_rgb(hex_color: str) -> tuple:
     h = hex_color.lstrip("#")
@@ -41,7 +57,7 @@ def _ui_font() -> str:
 
 
 def build_stylesheet() -> str:
-    """Global QSS for the Riptide dark theme."""
+    """Global QSS for the Riptide glassmorphism theme."""
     C = Colors
     font = _ui_font()
     return f"""
@@ -61,71 +77,115 @@ def build_stylesheet() -> str:
         QLabel#muted {{ color: {C.TEXT_MUTED}; background: transparent; }}
 
         QPushButton {{
-            background-color: {C.BG_TERTIARY}; color: {C.TEXT_PRIMARY};
-            border: 1px solid {C.BORDER_LIGHT}; border-radius: 4px;
+            background: {glass_bg(140)}; color: {C.TEXT_PRIMARY};
+            border: 1px solid {glass_edge(70)}; border-radius: {RADIUS_SM};
             padding: 6px 14px; font-size: 11px;
         }}
-        QPushButton:hover {{ background-color: {C.BG_HOVER}; border-color: {C.ACCENT}; }}
-        QPushButton:disabled {{ color: {C.TEXT_MUTED}; border-color: {C.BORDER}; }}
+        QPushButton:hover {{
+            background: {glass_bg(190)}; border-color: {glass_edge(100)}; color: {C.ACCENT};
+        }}
+        QPushButton:pressed {{
+            background: {glass_bg_dark(200)}; border-color: {glass_edge(120)};
+        }}
+        QPushButton:disabled {{
+            color: {C.TEXT_MUTED}; background: {glass_bg_dark(80)}; border-color: {C.BORDER};
+        }}
 
         QPushButton#accent_btn {{
-            background-color: {C.ACCENT}; color: {C.BG_PRIMARY};
-            border: 1px solid {C.ACCENT}; font-weight: bold;
+            background: {hex_to_rgba(COLORS["seafoam_deep"], 160)};
+            color: {C.ACCENT}; font-weight: bold;
+            border: 1px solid {hex_to_rgba(COLORS["seafoam"], 120)};
+            border-radius: {RADIUS_SM};
         }}
-        QPushButton#accent_btn:hover {{ background-color: {C.ACCENT_HOVER}; }}
+        QPushButton#accent_btn:hover {{
+            background: {hex_to_rgba(COLORS["seafoam_deep"], 210)};
+            border-color: {glass_edge(80)};
+        }}
         QPushButton#danger_btn {{
-            background-color: transparent; color: {C.DANGER};
-            border: 1px solid {C.DANGER};
+            background: {hex_to_rgba(COLORS["coral_dim"], 140)};
+            color: {C.DANGER};
+            border: 1px solid {hex_to_rgba(COLORS["coral"], 100)};
+            border-radius: {RADIUS_SM};
         }}
-        QPushButton#danger_btn:hover {{ background-color: {C.DANGER}; color: #ffffff; }}
-        QPushButton#ghost_btn {{ background-color: transparent; border: none; color: {C.TEXT_SECONDARY}; }}
+        QPushButton#danger_btn:hover {{
+            background: {hex_to_rgba(COLORS["coral_dim"], 200)};
+            color: #ffffff;
+        }}
+        QPushButton#ghost_btn {{ background: transparent; border: none; color: {C.TEXT_SECONDARY}; }}
         QPushButton#ghost_btn:hover {{ color: {C.ACCENT}; }}
 
         QLineEdit {{
-            background-color: {C.BG_TERTIARY}; color: {C.TEXT_PRIMARY};
-            border: 1px solid {C.BORDER_LIGHT}; border-radius: 4px; padding: 6px 10px;
+            background: {glass_bg_dark(120)}; color: {C.TEXT_PRIMARY};
+            border: 1px solid {glass_edge(60)}; border-radius: {RADIUS_SM};
+            padding: 6px 10px;
         }}
-        QLineEdit:focus {{ border-color: {C.ACCENT}; }}
+        QLineEdit:focus {{
+            border: 1px solid {C.ACCENT}; background: {glass_bg_dark(150)};
+        }}
 
         QComboBox {{
-            background-color: {C.BG_TERTIARY}; color: {C.TEXT_PRIMARY};
-            border: 1px solid {C.BORDER_LIGHT}; border-radius: 4px; padding: 5px 10px;
+            background: {glass_bg_dark(130)}; color: {C.TEXT_PRIMARY};
+            border: 1px solid {glass_edge(60)}; border-radius: {RADIUS_SM}; padding: 5px 10px;
         }}
         QComboBox::drop-down {{ border: none; width: 20px; }}
         QComboBox QAbstractItemView {{
-            background-color: {C.BG_SECONDARY}; color: {C.TEXT_PRIMARY};
-            border: 1px solid {C.BORDER_LIGHT}; selection-background-color: {C.ACCENT_DIM};
+            background: {glass_bg_heavy(230)}; color: {C.TEXT_PRIMARY};
+            border: 1px solid {glass_edge()}; border-radius: {RADIUS_MD};
+            selection-background-color: {hex_to_rgba(COLORS["seafoam_deep"], 180)};
+            selection-color: {C.ACCENT};
         }}
 
         QScrollArea {{ border: none; background: transparent; }}
         QScrollBar:vertical {{
-            background: {C.BG_PRIMARY}; width: 10px; margin: 0;
+            background: transparent; width: 10px; margin: 2px;
         }}
-        QScrollBar::handle:vertical {{ background: {C.BORDER_LIGHT}; border-radius: 4px; min-height: 24px; }}
-        QScrollBar::handle:vertical:hover {{ background: {C.ACCENT_DIM}; }}
+        QScrollBar::handle:vertical {{
+            background: {hex_to_rgba(COLORS["scrollbar_handle"], 180)};
+            min-height: 24px; border-radius: 5px; border: 2px solid transparent;
+        }}
+        QScrollBar::handle:vertical:hover {{
+            background: {hex_to_rgba(COLORS["scrollbar_hover"], 220)};
+            border: 2px solid transparent;
+        }}
         QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {{ height: 0; }}
-        QScrollBar:horizontal {{ background: {C.BG_PRIMARY}; height: 10px; margin: 0; }}
-        QScrollBar::handle:horizontal {{ background: {C.BORDER_LIGHT}; border-radius: 4px; min-width: 24px; }}
+        QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {{ background: none; }}
+        QScrollBar:horizontal {{
+            background: transparent; height: 10px; margin: 2px;
+        }}
+        QScrollBar::handle:horizontal {{
+            background: {hex_to_rgba(COLORS["scrollbar_handle"], 180)};
+            min-width: 24px; border-radius: 5px; border: 2px solid transparent;
+        }}
+        QScrollBar::handle:horizontal:hover {{
+            background: {hex_to_rgba(COLORS["scrollbar_hover"], 220)};
+            border: 2px solid transparent;
+        }}
         QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {{ width: 0; }}
+        QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {{ background: none; }}
 
         QSlider::groove:horizontal {{
-            height: 4px; background: {C.BG_TERTIARY}; border-radius: 2px;
+            height: 6px; background: {glass_bg_dark(120)}; border: 1px solid {glass_edge(40)};
+            border-radius: 3px;
         }}
-        QSlider::sub-page:horizontal {{ background: {C.ACCENT}; border-radius: 2px; }}
+        QSlider::sub-page:horizontal {{
+            background: {hex_to_rgba(COLORS["seafoam_deep"], 200)}; border-radius: 3px;
+        }}
         QSlider::handle:horizontal {{
-            width: 12px; margin: -4px 0; background: {C.ACCENT};
-            border-radius: 6px;
+            width: 16px; margin: -6px 0; background: {C.ACCENT};
+            border: 2px solid {COLORS["seafoam_dim"]}; border-radius: 8px;
         }}
-        QSlider::handle:horizontal:hover {{ background: {C.ACCENT_HOVER}; }}
+        QSlider::handle:horizontal:hover {{
+            background: {COLORS["seafoam_dim"]}; border-color: {C.ACCENT};
+        }}
 
         QListWidget {{
-            background-color: {C.BG_SECONDARY}; color: {C.TEXT_SECONDARY};
-            border: none; outline: none; font-size: 12px;
+            background: {glass_bg(100)}; color: {C.TEXT_SECONDARY};
+            border: none; outline: none; font-size: 12px; border-radius: {RADIUS_MD};
         }}
-        QListWidget::item {{ padding: 8px 14px; border: none; }}
-        QListWidget::item:hover {{ background-color: {C.BG_HOVER}; color: {C.TEXT_PRIMARY}; }}
+        QListWidget::item {{ padding: 8px 14px; border: none; border-radius: {RADIUS_SM}; }}
+        QListWidget::item:hover {{ background: {glass_bg(140)}; color: {C.TEXT_PRIMARY}; }}
         QListWidget::item:selected {{
-            background-color: {C.ACCENT_DIM}; color: {C.ACCENT};
+            background: {hex_to_rgba(COLORS["surface_selected"], 180)}; color: {C.ACCENT};
             border-left: 3px solid {C.ACCENT};
         }}
         QListWidget::item:disabled {{
@@ -133,26 +193,44 @@ def build_stylesheet() -> str:
         }}
 
         QFrame#card {{
-            background-color: {C.BG_CARD}; border: 1px solid {C.BORDER};
-            border-radius: 6px;
+            background: {glass_bg(185)}; border: 1px solid {glass_edge()};
+            border-top: 1px solid {glass_sheen()};
+            border-radius: {RADIUS_LG};
         }}
-        QFrame#card:hover {{ border-color: {C.BORDER_LIGHT}; }}
-        QFrame#trackrow {{ background-color: {C.BG_CARD}; border: none; border-radius: 4px; }}
-        QFrame#trackrow:hover {{ background-color: {C.BG_HOVER}; }}
+        QFrame#card:hover {{ border-color: {glass_edge(80)}; }}
+        QFrame#trackrow {{
+            background: {glass_bg(100)}; border: none; border-radius: {RADIUS_SM};
+        }}
+        QFrame#trackrow:hover {{ background: {glass_bg(160)}; }}
         QFrame#nowplaying {{
-            background-color: {C.BG_SECONDARY}; border-top: 1px solid {C.BORDER};
+            background: {glass_bg_heavy(210)}; border-top: 1px solid {glass_edge()};
         }}
         QFrame#sfxbtn {{
-            background-color: {C.BG_TERTIARY}; border: 2px solid {C.BORDER_LIGHT};
-            border-radius: 8px; color: {C.TEXT_PRIMARY}; font-size: 12px; font-weight: bold;
+            background: {glass_bg(140)}; border: 2px solid {glass_edge()};
+            border-radius: {RADIUS_MD}; color: {C.TEXT_PRIMARY}; font-size: 12px; font-weight: bold;
         }}
-        QFrame#sfxbtn:hover {{ background-color: {C.BG_HOVER}; }}
+        QFrame#sfxbtn:hover {{ background: {glass_bg(190)}; }}
         QDialog {{ background-color: {C.BG_PRIMARY}; }}
         QMessageBox {{ background-color: {C.BG_PRIMARY}; }}
         QInputDialog {{ background-color: {C.BG_PRIMARY}; }}
-        QMenu {{ background-color: {C.BG_SECONDARY}; color: {C.TEXT_PRIMARY};
-                 border: 1px solid {C.BORDER_LIGHT}; }}
-        QMenu::item:selected {{ background-color: {C.ACCENT_DIM}; color: {C.ACCENT}; }}
+        QMenu {{
+            background: {glass_bg_heavy(230)}; color: {C.TEXT_PRIMARY};
+            border: 1px solid {glass_edge()}; border-radius: {RADIUS_MD};
+        }}
+        QMenu::item:selected {{
+            background: {hex_to_rgba(COLORS["seafoam_deep"], 180)}; color: {C.ACCENT};
+        }}
+
+        QProgressBar {{
+            background: {glass_bg_dark(100)}; border: 1px solid {glass_edge(50)};
+            border-radius: 4px; text-align: center; color: {C.TEXT_PRIMARY};
+            height: 8px;
+        }}
+        QProgressBar::chunk {{
+            background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                stop:0 {COLORS["seafoam_deep"]}, stop:1 {C.ACCENT});
+            border-radius: 3px;
+        }}
     """
 
 
@@ -164,14 +242,14 @@ def apply_dark_theme(app) -> None:
     pal = QPalette()
     pal.setColor(QPalette.Window, QColor(C.BG_PRIMARY))
     pal.setColor(QPalette.WindowText, QColor(C.TEXT_PRIMARY))
-    pal.setColor(QPalette.Base, QColor(C.BG_TERTIARY))
-    pal.setColor(QPalette.AlternateBase, QColor(C.BG_CARD))
+    pal.setColor(QPalette.Base, QColor(COLORS["deep_navy"]))
+    pal.setColor(QPalette.AlternateBase, QColor(COLORS["slate_navy"]))
     pal.setColor(QPalette.Text, QColor(C.TEXT_PRIMARY))
-    pal.setColor(QPalette.Button, QColor(C.BG_TERTIARY))
+    pal.setColor(QPalette.Button, QColor(COLORS["slate_navy"]))
     pal.setColor(QPalette.ButtonText, QColor(C.TEXT_PRIMARY))
-    pal.setColor(QPalette.Highlight, QColor(C.ACCENT_DIM))
-    pal.setColor(QPalette.HighlightedText, QColor(C.ACCENT))
-    pal.setColor(QPalette.ToolTipBase, QColor(C.BG_SECONDARY))
+    pal.setColor(QPalette.Highlight, QColor(C.ACCENT))
+    pal.setColor(QPalette.HighlightedText, QColor(COLORS["void_black"]))
+    pal.setColor(QPalette.ToolTipBase, QColor(COLORS["slate_navy"]))
     pal.setColor(QPalette.ToolTipText, QColor(C.TEXT_PRIMARY))
     pal.setColor(QPalette.PlaceholderText, QColor(C.TEXT_MUTED))
     app.setPalette(pal)

@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <defs>
+    <radialGradient id="l-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#7B68EE" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#7B68EE" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="60" cy="60" r="58" fill="#081626" stroke="#7B68EE" stroke-width="1.5" stroke-opacity="0.4"/>
+  <circle cx="60" cy="60" r="50" fill="url(#l-glow)"/>
+  <!-- Serpentine body -->
+  <path d="M30 35 Q40 28 50 35 Q60 42 70 35 Q80 28 90 35 Q95 40 90 48 Q80 55 70 48 Q60 41 50 48 Q40 55 30 48 Q25 42 30 35Z" fill="#7B68EE" opacity="0.8"/>
+  <!-- Body segments -->
+  <path d="M35 50 Q45 43 55 50 Q65 57 75 50 Q85 43 88 50 Q85 57 75 64 Q65 71 55 64 Q45 57 35 64 Q30 57 35 50Z" fill="#7B68EE" opacity="0.65"/>
+  <path d="M38 66 Q48 59 58 66 Q68 73 78 66 Q85 60 85 68 Q80 75 70 78 Q60 81 50 78 Q40 75 35 68 Q32 62 38 66Z" fill="#7B68EE" opacity="0.5"/>
+  <!-- Head -->
+  <ellipse cx="60" cy="32" rx="14" ry="12" fill="#7B68EE" opacity="0.9"/>
+  <!-- Eyes -->
+  <circle cx="54" cy="30" r="3" fill="#2E1A6E"/>
+  <circle cx="66" cy="30" r="3" fill="#2E1A6E"/>
+  <circle cx="55" cy="29" r="1.2" fill="#EEF4F8"/>
+  <circle cx="67" cy="29" r="1.2" fill="#EEF4F8"/>
+  <!-- Crown/horns -->
+  <path d="M50 22 L48 14 L54 20Z" fill="#9B8AFF" opacity="0.7"/>
+  <path d="M60 20 L60 12 L63 18Z" fill="#9B8AFF" opacity="0.8"/>
+  <path d="M70 22 L72 14 L66 20Z" fill="#9B8AFF" opacity="0.7"/>
+  <!-- Tail -->
+  <path d="M42 80 Q38 90 42 100 Q46 108 50 100 Q48 92 45 82Z" fill="#7B68EE" opacity="0.4"/>
+  <path d="M50 82 Q48 92 52 102 Q56 108 58 100 Q55 92 52 84Z" fill="#7B68EE" opacity="0.35"/>
+  <path d="M58 80 Q60 90 64 98 Q68 104 66 96 Q63 88 60 80Z" fill="#7B68EE" opacity="0.3"/>
+</svg>

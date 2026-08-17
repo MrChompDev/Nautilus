@@ -45,6 +45,10 @@ try:
         SPACING,
         create_nautilus_palette,
         get_global_stylesheet,
+        glass_bg,
+        glass_bg_dark,
+        glass_edge,
+        glass_sheen,
     )
 except ImportError:
     COLORS = {
@@ -60,6 +64,13 @@ except ImportError:
 
     def get_global_stylesheet(): return ""
     def create_nautilus_palette(): return QPalette()
+    def hex_to_rgba(h, a=255):
+        v = h.lstrip("#")
+        return f"rgba({int(v[0:2],16)},{int(v[2:4],16)},{int(v[4:6],16)},{a})"
+    def glass_bg(a=180): return hex_to_rgba(COLORS["slate_navy"], a)
+    def glass_bg_dark(a=140): return hex_to_rgba(COLORS["deep_navy"], a)
+    def glass_edge(a=48): return hex_to_rgba(COLORS["seafoam"], a)
+    def glass_sheen(): return "rgba(238, 244, 248, 26)"
 
 DATA_FILE = os.path.join(os.path.dirname(os.path.abspath(__file__)), "history.json")
 
@@ -280,14 +291,14 @@ class MarinerWindow(QMainWindow):
                                    f"font-family: '{FONTS['mono']}'; font-size: {FONTS['size_sm']}px;")
 
         root = QWidget()
-        root.setStyleSheet(f"background: {COLORS['abyss_navy']};")
+        root.setStyleSheet(f"QWidget {{ background: {glass_bg(180)}; }}")
         self.setCentralWidget(root)
         outer = QVBoxLayout(root)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.setSpacing(0)
 
         top = QWidget()
-        top.setStyleSheet(f"background: {COLORS['void_black']}; border-bottom: 1px solid {COLORS['border']};")
+        top.setStyleSheet(f"background: {COLORS['void_black']}; border-bottom: 1px solid {glass_edge()};")
         top.setFixedHeight(52)
         top_lay = QHBoxLayout(top)
         top_lay.setContentsMargins(SPACING["lg"], 0, SPACING["lg"], 0)
@@ -303,11 +314,11 @@ class MarinerWindow(QMainWindow):
 
         splitter = QSplitter(Qt.Horizontal)
         splitter.setHandleWidth(1)
-        splitter.setStyleSheet(f"QSplitter::handle {{ background: {COLORS['border']}; }}")
+        splitter.setStyleSheet(f"QSplitter::handle {{ background: {glass_edge()}; }}")
 
         # Left: display + keypad
         left = QWidget()
-        left.setStyleSheet(f"background: {COLORS['deep_navy']};")
+        left.setStyleSheet(f"background: {glass_bg_dark(140)};")
         left_lay = QVBoxLayout(left)
         left_lay.setContentsMargins(SPACING["lg"], SPACING["lg"], SPACING["lg"], SPACING["lg"])
         left_lay.setSpacing(SPACING["md"])
@@ -317,8 +328,9 @@ class MarinerWindow(QMainWindow):
         self._display.setAlignment(Qt.AlignRight | Qt.AlignVCenter)
         self._display.setText("0")
         self._display.setStyleSheet(f"""
-            QLineEdit {{ background: {COLORS['void_black']}; color: {COLORS['hd_white']};
-                border: 1px solid {COLORS['border']}; padding: 14px 16px;
+            QLineEdit {{ background: {glass_bg_dark(180)}; color: {COLORS['hd_white']};
+                border: 1px solid {glass_edge(70)}; border-radius: 12px;
+                padding: 14px 16px;
                 font-family: "{FONTS['mono']}"; font-size: 26px; }}
         """)
         left_lay.addWidget(self._display)
@@ -336,7 +348,7 @@ class MarinerWindow(QMainWindow):
 
         # Right: history tape
         right = QWidget()
-        right.setStyleSheet(f"background: {COLORS['deep_navy']};")
+        right.setStyleSheet(f"background: {glass_bg_dark(140)};")
         right_lay = QVBoxLayout(right)
         right_lay.setContentsMargins(0, 0, 0, 0)
         right_lay.setSpacing(0)
@@ -367,22 +379,23 @@ class MarinerWindow(QMainWindow):
     def _key(self, text: str, kind: str = "num"):
         """Build a keypad button. kind: num, op, fn, eq, misc, clear."""
         if kind == "num":
-            bg, fg, hover = COLORS["slate_navy"], COLORS["hd_white"], COLORS["surface_hover"]
+            _, fg, hover = COLORS["slate_navy"], COLORS["hd_white"], COLORS["surface_hover"]
         elif kind == "op":
-            bg, fg, hover = COLORS["deep_navy"], COLORS["amber"], COLORS["surface_hover"]
+            _, fg, hover = COLORS["deep_navy"], COLORS["amber"], COLORS["surface_hover"]
         elif kind == "fn":
-            bg, fg, hover = COLORS["deep_navy"], COLORS["seafoam"], COLORS["seafoam_deep"]
+            _, fg, hover = COLORS["deep_navy"], COLORS["seafoam"], COLORS["seafoam_deep"]
         elif kind == "eq":
-            bg, fg, hover = COLORS["seafoam"], COLORS["void_black"], COLORS["seafoam_dim"]
+            _, fg, hover = COLORS["seafoam"], COLORS["void_black"], COLORS["seafoam_dim"]
         elif kind == "clear":
-            bg, fg, hover = COLORS["deep_navy"], COLORS["coral"], COLORS["coral_dim"]
+            _, fg, hover = COLORS["deep_navy"], COLORS["coral"], COLORS["coral_dim"]
         else:
-            bg, fg, hover = COLORS["slate_navy"], COLORS["text_secondary"], COLORS["surface_hover"]
+            _, fg, hover = COLORS["slate_navy"], COLORS["text_secondary"], COLORS["surface_hover"]
         btn = QPushButton(text)
         btn.setCursor(Qt.PointingHandCursor)
         btn.setFixedHeight(46)
         btn.setStyleSheet(f"""
-            QPushButton {{ background: {bg}; color: {fg}; border: 1px solid {COLORS['border']};
+            QPushButton {{ background: {glass_bg(140)}; color: {fg}; border: 1px solid {glass_edge(70)};
+                border-radius: 12px;
                 font-family: "{FONTS['mono']}"; font-size: {FONTS['size_md']}px; }}
             QPushButton:hover {{ background: {hover}; border-color: {COLORS['border_active']}; }}
             QPushButton:pressed {{ background: {COLORS['surface_pressed']}; }}

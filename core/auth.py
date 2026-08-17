@@ -38,7 +38,16 @@ try:
     from core import wallpapers
     from core.icons import get_logo
     from core.logger import get_logger
-    from core.theme import COLORS, FONTS, SPACING, hex_to_rgba
+    from core.theme import (
+        COLORS,
+        FONTS,
+        SPACING,
+        glass_bg,
+        glass_card_style,
+        glass_edge,
+        glass_sheen,
+        hex_to_rgba,
+    )
     _log = get_logger("SYSTEM")
     _log.info("Auth system initialized")
     _HAS_CORE = True
@@ -66,17 +75,22 @@ except ImportError:
     def get_logo(app_id: str, size: int = None):
         return None
 
+    def glass_bg(alpha: int = 180) -> str:
+        return hex_to_rgba(COLORS["slate_navy"], alpha)
 
-def _glass(alpha: int = 205) -> str:
-    return hex_to_rgba(COLORS["slate_navy"], alpha)
+    def glass_edge(alpha: int = 48) -> str:
+        return hex_to_rgba(COLORS["seafoam"], alpha)
 
+    def glass_sheen() -> str:
+        return "rgba(238, 244, 248, 26)"
 
-def _edge() -> str:
-    return hex_to_rgba(COLORS["seafoam"], 48)
-
-
-def _sheen() -> str:
-    return "rgba(238, 244, 248, 26)"
+    def glass_card_style(radius: int = 18) -> str:
+        return (
+            f"background: {glass_bg(185)};"
+            f"border: 1px solid {glass_edge()};"
+            f"border-top: 1px solid {glass_sheen()};"
+            f"border-radius: {radius}px;"
+        )
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -394,12 +408,7 @@ def generate_avatar(initials: str, size: int = 100) -> QPixmap:
 #  mirroring the desktop's glass + ocean aesthetic.
 # ═══════════════════════════════════════════════════════════════
 
-_GLASS_CARD = f"""
-    background: {_glass(205)};
-    border: 1px solid {_edge()};
-    border-top: 1px solid {_sheen()};
-    border-radius: 18px;
-"""
+_GLASS_CARD = glass_card_style(radius=18)
 
 _FIELD_SS = f"""
     QLineEdit {{

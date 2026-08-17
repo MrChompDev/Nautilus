@@ -46,6 +46,10 @@ try:
         SPACING,
         create_nautilus_palette,
         get_global_stylesheet,
+        glass_bg,
+        glass_bg_dark,
+        glass_edge,
+        glass_sheen,
     )
 except ImportError:
     # Fallback for standalone execution
@@ -62,6 +66,13 @@ except ImportError:
 
     def get_global_stylesheet(): return ""
     def create_nautilus_palette(): return QPalette()
+    def hex_to_rgba(h, a=255):
+        v = h.lstrip("#")
+        return f"rgba({int(v[0:2],16)},{int(v[2:4],16)},{int(v[4:6],16)},{a})"
+    def glass_bg(a=180): return hex_to_rgba(COLORS["slate_navy"], a)
+    def glass_bg_dark(a=140): return hex_to_rgba(COLORS["deep_navy"], a)
+    def glass_edge(a=48): return hex_to_rgba(COLORS["seafoam"], a)
+    def glass_sheen(): return "rgba(238, 244, 248, 26)"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -230,8 +241,10 @@ class MetricCard(QFrame):
         super().__init__(parent)
         self.setStyleSheet(f"""
             MetricCard {{
-                background-color: {COLORS['slate_navy']};
-                border: 1px solid {COLORS['border']};
+                background: {glass_bg(170)};
+                border: 1px solid {glass_edge()};
+                border-top: 1px solid {glass_sheen()};
+                border-radius: 18px;
             }}
         """)
         self.setMinimumHeight(90)
@@ -246,6 +259,7 @@ class MetricCard(QFrame):
             font-family: "{FONTS['mono']}";
             font-size: {FONTS['size_xs']}px;
             letter-spacing: 1px;
+            background: transparent;
         """)
         layout.addWidget(self._title_label)
 
@@ -255,20 +269,21 @@ class MetricCard(QFrame):
             font-family: "{FONTS['mono']}";
             font-size: {FONTS['size_xl']}px;
             font-weight: bold;
+            background: transparent;
         """)
         layout.addWidget(self._value_label)
 
         self._unit = unit
         self._unit_label = QLabel(unit)
-        self._unit_label.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: {FONTS['size_xs']}px;")
+        self._unit_label.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: {FONTS['size_xs']}px; background: transparent;")
         layout.addWidget(self._unit_label)
 
         self._progress = QProgressBar()
-        self._progress.setFixedHeight(3)
+        self._progress.setFixedHeight(4)
         self._progress.setTextVisible(False)
         self._progress.setStyleSheet(f"""
-            QProgressBar {{ background-color: {COLORS['deep_navy']}; border: none; }}
-            QProgressBar::chunk {{ background-color: {COLORS['seafoam']}; }}
+            QProgressBar {{ background: {glass_bg_dark(100)}; border: 1px solid {glass_edge(50)}; border-radius: 2px; }}
+            QProgressBar::chunk {{ background: qlineargradient(x1:0,y1:0,x2:1,y2:0, stop:0 {COLORS['seafoam_deep']}, stop:1 {COLORS['seafoam']}); border-radius: 2px; }}
         """)
         layout.addWidget(self._progress)
 
@@ -304,12 +319,14 @@ class ProcessTree(QWidget):
         self._kill_btn = QPushButton("⏻  KILL")
         self._kill_btn.setStyleSheet(f"""
             QPushButton {{
-                background-color: transparent; color: {COLORS['coral']};
-                border: 1px solid {COLORS['coral']};
+                background: rgba(255, 127, 80, 140); color: {COLORS['coral']};
+                border: 1px solid rgba(255, 127, 80, 100);
+                border-radius: 8px;
                 font-family: "{FONTS['mono']}"; font-size: {FONTS['size_xs']}px;
-                padding: 3px 10px; font-weight: bold;
+                padding: 4px 12px; font-weight: bold;
             }}
-            QPushButton:hover {{ background-color: {COLORS['coral']}; color: {COLORS['void_black']}; }}
+            QPushButton:hover {{ background: rgba(255, 127, 80, 200); }}
+            QPushButton:disabled {{ background: rgba(255, 127, 80, 60); color: {COLORS['text_muted']}; border-color: {COLORS['border_dim']}; }}
         """)
         self._kill_btn.clicked.connect(self._kill_selected)
         self._kill_btn.setEnabled(False)
@@ -318,12 +335,13 @@ class ProcessTree(QWidget):
         self._refresh_btn = QPushButton("↻")
         self._refresh_btn.setStyleSheet(f"""
             QPushButton {{
-                background-color: transparent; color: {COLORS['text_secondary']};
-                border: 1px solid {COLORS['border']};
+                background: {glass_bg(120)}; color: {COLORS['text_secondary']};
+                border: 1px solid {glass_edge(50)};
+                border-radius: 8px;
                 font-family: "{FONTS['mono']}"; font-size: {FONTS['size_sm']}px;
-                padding: 3px 8px;
+                padding: 4px 10px;
             }}
-            QPushButton:hover {{ color: {COLORS['seafoam']}; }}
+            QPushButton:hover {{ color: {COLORS['seafoam']}; background: {glass_bg(180)}; border-color: {glass_edge(80)}; }}
         """)
         toolbar.addWidget(self._refresh_btn)
 
@@ -342,23 +360,24 @@ class ProcessTree(QWidget):
         self._tree.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self._tree.setStyleSheet(f"""
             QTreeWidget {{
-                background-color: {COLORS['slate_navy']};
+                background: {glass_bg(100)};
                 color: {COLORS['hd_white']};
-                border: 1px solid {COLORS['border']};
+                border: 1px solid {glass_edge()};
+                border-radius: 12px;
                 font-family: "{FONTS['mono']}";
                 font-size: {FONTS['size_sm']}px;
             }}
-            QTreeWidget::item {{ padding: 2px 4px; border: none; }}
-            QTreeWidget::item:selected {{ background-color: {COLORS['surface_selected']}; color: {COLORS['seafoam']}; }}
+            QTreeWidget::item {{ padding: 3px 6px; border: none; border-radius: 0px; }}
+            QTreeWidget::item:selected {{ background: rgba(30, 58, 95, 180); color: {COLORS['seafoam']}; }}
             QHeaderView::section {{
-                background-color: {COLORS['void_black']};
+                background: {glass_bg_dark(180)};
                 color: {COLORS['seafoam']};
                 font-family: "{FONTS['mono']}";
                 font-size: {FONTS['size_xs']}px;
-                padding: 3px 6px;
+                padding: 4px 8px;
                 border: none;
-                border-right: 1px solid {COLORS['border']};
-                border-bottom: 2px solid {COLORS['border']};
+                border-right: 1px solid {COLORS['border_dim']};
+                border-bottom: 2px solid {glass_edge()};
             }}
         """)
         self._tree.itemSelectionChanged.connect(self._on_selection_changed)
@@ -440,6 +459,7 @@ class CurrentWindow(QMainWindow):
     def _setup_ui(self):
         central = QWidget()
         self.setCentralWidget(central)
+        central.setStyleSheet(f"QWidget {{ background: {glass_bg(180)}; }}")
         main_layout = QVBoxLayout(central)
         main_layout.setContentsMargins(SPACING["md"], SPACING["md"], SPACING["md"], SPACING["md"])
         main_layout.setSpacing(SPACING["md"])
@@ -449,7 +469,8 @@ class CurrentWindow(QMainWindow):
         title.setStyleSheet(f"""
             color: {COLORS['seafoam']}; font-family: "{FONTS['mono']}";
             font-size: {FONTS['size_lg']}px; font-weight: bold; letter-spacing: 2px;
-            padding-bottom: 4px; border-bottom: 1px solid {COLORS['border']};
+            padding-bottom: 4px; border-bottom: 1px solid {glass_edge()};
+            background: transparent;
         """)
         main_layout.addWidget(title)
 

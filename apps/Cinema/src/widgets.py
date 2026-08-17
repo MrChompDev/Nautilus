@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (
 from apps.Cinema.src.library import MediaItem
 
 try:
-    from core.theme import COLORS, FONTS, SPACING
+    from core.theme import COLORS, FONTS, SPACING, glass_bg, glass_bg_dark, glass_edge, glass_sheen
 except ImportError:
     COLORS = {"abyss_navy": "#081626", "slate_navy": "#0E2238", "deep_navy": "#050D14",
               "void_black": "#02060A", "seafoam": "#00F2C2", "seafoam_dim": "#00C9A0",
@@ -32,6 +32,14 @@ except ImportError:
     FONTS = {"mono": "JetBrains Mono", "ui": "Segoe UI", "size_xs": 10, "size_sm": 11,
              "size_md": 12, "size_lg": 13, "size_xl": 14}
     SPACING = {"xs": 2, "sm": 4, "md": 8, "lg": 12, "xl": 16}
+
+    def hex_to_rgba(h, a=255):
+        v = h.lstrip("#")
+        return f"rgba({int(v[0:2],16)},{int(v[2:4],16)},{int(v[4:6],16)},{a})"
+    def glass_bg(a=180): return hex_to_rgba(COLORS["slate_navy"], a)
+    def glass_bg_dark(a=140): return hex_to_rgba(COLORS["deep_navy"], a)
+    def glass_edge(a=48): return hex_to_rgba(COLORS["seafoam"], a)
+    def glass_sheen(): return "rgba(238, 244, 248, 26)"
 
 
 class ArtCache:
@@ -107,10 +115,12 @@ class MediaCard(QFrame):
         self.setCursor(Qt.PointingHandCursor)
         self.setStyleSheet(f"""
             MediaCard {{
-                background-color: {COLORS['slate_navy']};
-                border: 1px solid {COLORS['border']};
+                background-color: {glass_bg(170)};
+                border: 1px solid {glass_edge()};
+                border-radius: 18px;
+                border-top: 1px solid {glass_sheen()};
             }}
-            MediaCard:hover {{ border-color: {COLORS['seafoam']}; background-color: {COLORS['surface_hover']}; }}
+            MediaCard:hover {{ border-color: {COLORS['seafoam']}; background-color: {glass_bg(200)}; }}
         """)
 
         layout = QVBoxLayout(self)
@@ -120,11 +130,12 @@ class MediaCard(QFrame):
         self._poster = QLabel()
         self._poster.setFixedSize(152, 216)
         self._poster.setAlignment(Qt.AlignCenter)
-        self._poster.setStyleSheet(f"background-color: {COLORS['deep_navy']}; border: 1px solid {COLORS['border']};")
         self._poster.setText("\U0001F3AC")
         self._poster.setStyleSheet(f"""
-            background-color: {COLORS['deep_navy']};
-            border: 1px solid {COLORS['border']};
+            background-color: {glass_bg_dark(120)};
+            border: 1px solid {glass_edge()};
+            border-radius: 12px;
+            border-top: 1px solid {glass_sheen()};
             color: {COLORS['text_muted']}; font-size: 28px;
         """)
         layout.addWidget(self._poster)
@@ -177,8 +188,9 @@ class MediaCard(QFrame):
         from PySide6.QtWidgets import QMenu
         menu = QMenu(self)
         menu.setStyleSheet(f"""
-            QMenu {{ background-color: {COLORS['slate_navy']}; color: {COLORS['hd_white']};
-                      border: 1px solid {COLORS['border']}; }}
+            QMenu {{ background-color: {glass_bg(200)}; color: {COLORS['hd_white']};
+                      border: 1px solid {glass_edge()}; border-radius: 10px;
+                      border-top: 1px solid {glass_sheen()}; }}
             QMenu::item:selected {{ background-color: {COLORS['seafoam_deep']}; color: {COLORS['seafoam']}; }}
         """)
         play = menu.addAction("\u25B6  Play")
@@ -261,17 +273,17 @@ class Sidebar(QListWidget):
         self.setFixedWidth(190)
         self.setStyleSheet(f"""
             QListWidget {{
-                background-color: {COLORS['slate_navy']};
+                background-color: {glass_bg(160)};
                 color: {COLORS['text_secondary']};
                 border: none;
-                border-right: 1px solid {COLORS['border']};
+                border-right: 1px solid {glass_edge()};
                 font-family: "{FONTS['mono']}";
                 font-size: {FONTS['size_sm']}px;
                 outline: none;
             }}
-            QListWidget::item {{ padding: 8px 12px; border: none; }}
-            QListWidget::item:hover {{ background-color: {COLORS['surface_hover']}; color: {COLORS['hd_white']}; }}
-            QListWidget::item:selected {{ background-color: {COLORS['seafoam_deep']}; color: {COLORS['seafoam']}; }}
+            QListWidget::item {{ padding: 8px 12px; border: none; border-radius: 6px; margin: 2px 4px; }}
+            QListWidget::item:hover {{ background-color: {glass_bg(80)}; color: {COLORS['hd_white']}; }}
+            QListWidget::item:selected {{ background-color: {COLORS['seafoam_deep']}; color: {COLORS['seafoam']}; border-radius: 6px; }}
         """)
 
     def add_section(self, text: str):
@@ -369,8 +381,8 @@ class BusyBar(QWidget):
         bar.setFixedHeight(4)
         bar.setTextVisible(False)
         bar.setStyleSheet(f"""
-            QProgressBar {{ background: {COLORS['deep_navy']}; border: none; }}
-            QProgressBar::chunk {{ background: {COLORS['seafoam']}; }}
+            QProgressBar {{ background: {glass_bg_dark(100)}; border: none; border-radius: 2px; }}
+            QProgressBar::chunk {{ background: {COLORS['seafoam']}; border-radius: 2px; }}
         """)
         layout.addWidget(bar)
 
@@ -383,7 +395,7 @@ def section_header(title: str, subtitle: str = "") -> QLabel:
     lbl.setStyleSheet(f"""
         color: {COLORS['seafoam']}; font-family: "{FONTS['mono']}";
         font-size: {FONTS['size_xl']}px; font-weight: bold; letter-spacing: 2px;
-        padding: 6px 0; border-bottom: 1px solid {COLORS['border']};
+        padding: 6px 0; border-bottom: 1px solid {glass_edge()};
         background: transparent;
     """)
     return lbl

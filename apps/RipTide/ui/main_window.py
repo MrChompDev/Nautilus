@@ -30,6 +30,7 @@ from apps.RipTide.ui.sfx_board import SFXBoardView
 from apps.RipTide.ui.styles import Colors
 from apps.RipTide.ui.widgets import NowPlayingBar
 from apps.RipTide.workers.api_workers import DashboardWorker, SearchWorker
+from core.theme import glass_bg_heavy, glass_edge
 
 NAV_ITEMS = [
     ("Dashboard", "\U0001f4ca"),
@@ -157,7 +158,7 @@ class MainWindow(QMainWindow):
     def _create_sidebar(self) -> QWidget:
         side = QWidget()
         side.setFixedWidth(220)
-        side.setStyleSheet(f"background-color: {Colors.BG_SECONDARY};")
+        side.setStyleSheet(f"background: {glass_bg_heavy(210)}; border-right: 1px solid {glass_edge()};")
         lay = QVBoxLayout(side)
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
@@ -166,7 +167,7 @@ class MainWindow(QMainWindow):
         logo.setFixedHeight(56)
         logo.setStyleSheet(
             f"color: {Colors.ACCENT}; font-size: 16px; font-weight: bold; "
-            f"background-color: {Colors.BG_SECONDARY};")
+            f"background: {glass_bg_heavy(210)};")
         lay.addWidget(logo)
 
         self._nav = QListWidget()
@@ -183,7 +184,7 @@ class MainWindow(QMainWindow):
 
         ver = QLabel(f"  v{config.APP_VERSION}")
         ver.setStyleSheet(f"color: {Colors.TEXT_MUTED}; font-size: 9px; "
-                          f"background-color: {Colors.BG_SECONDARY}; padding: 6px;")
+                          f"background: {glass_bg_heavy(210)}; padding: 6px;")
         lay.addWidget(ver)
 
         self._nav.setCurrentRow(0)

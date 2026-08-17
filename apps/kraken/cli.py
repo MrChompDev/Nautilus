@@ -227,17 +227,17 @@ def cmd_build(cfg: KrakenConfig, spec_ref: str, use_color: bool = True):
 
 def cmd_models(cfg: KrakenConfig, use_color: bool = True):
     from apps.kraken.engine import local
-    from apps.kraken.engine.config import NAUTILUS_MODELS
+    from apps.kraken.engine.config import SEA_CREATURE_MODELS
 
     naut = local.list_local_models()
     if naut:
-        print("Nautilus from-scratch models (local, offline):")
+        print("Sea-creature models (local, offline):")
         for m in naut:
-            label = NAUTILUS_MODELS.get(m["id"], m["id"])
-            print(f"  {'nautilus':<10} {m['id']:<8} ~{m['size_mb']}MB  {label}")
+            label = SEA_CREATURE_MODELS.get(m["id"], m["id"])
+            print(f"  {'nautilus':<10} {m['id']:<12} ~{m['size_mb']}MB  {label}")
         print("\nLocal servers (downloaded / reachable):")
     else:
-        print("Nautilus from-scratch models: (none trained yet) — see models/lm/train.py")
+        print("Sea-creature models: (none trained yet) — see models/lm/train.py")
         print("\nLocal servers (downloaded / reachable):")
     local = find_local_models(cfg.base_url)
     by_provider: dict[str, list[str]] = {}

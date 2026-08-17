@@ -61,38 +61,21 @@ from core.search_overlay import SearchOverlay
 from core.theme import (
     COLORS,
     FONTS,
+    RADIUS_LG,
+    RADIUS_MD,
     SPACING,
     create_nautilus_palette,
     get_global_stylesheet,
+    glass_bg,
+    glass_bg_dark,
+    glass_edge,
+    glass_sheen,
     hex_to_rgba,
 )
 
-# ═══════════════════════════════════════════════════════════════
-#  GLASS SURFACE TOKENS
-# ═══════════════════════════════════════════════════════════════
-
-PANEL_RADIUS = 14
-DOCK_RADIUS = 18
-
-
-def _glass(alpha: int = 205) -> str:
-    """Translucent slate panel so the ocean wallpaper glows through."""
-    return hex_to_rgba(COLORS["slate_navy"], alpha)
-
-
-def _glass_dark(alpha: int = 120) -> str:
-    """Darker translucent chip (metrics, date, buttons)."""
-    return hex_to_rgba(COLORS["deep_navy"], alpha)
-
-
-def _edge() -> str:
-    """Subtle seafoam edge for glass panels."""
-    return hex_to_rgba(COLORS["seafoam"], 48)
-
-
-def _sheen() -> str:
-    """Faint white sheen for the glass highlight line."""
-    return "rgba(238, 244, 248, 26)"
+# Glass radius tokens (kept for readability at call sites)
+PANEL_RADIUS = RADIUS_MD
+DOCK_RADIUS = RADIUS_LG
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -114,9 +97,9 @@ class TopBar(QFrame):
         self.setFixedHeight(40)
         self.setStyleSheet(f"""
             #topBar {{
-                background: {_glass(195)};
-                border: 1px solid {_edge()};
-                border-top: 1px solid {_sheen()};
+                background: {glass_bg(195)};
+                border: 1px solid {glass_edge()};
+                border-top: 1px solid {glass_sheen()};
                 border-radius: {PANEL_RADIUS}px;
             }}
         """)
@@ -153,7 +136,7 @@ class TopBar(QFrame):
         # ── Metrics pill ──
         metrics_pill = QFrame()
         metrics_pill.setStyleSheet(
-            f"background: {_glass_dark(120)}; border-radius: 10px;"
+            f"background: {glass_bg_dark(120)}; border-radius: 10px;"
         )
         metrics_layout = QHBoxLayout(metrics_pill)
         metrics_layout.setContentsMargins(10, 0, 10, 0)
@@ -176,7 +159,7 @@ class TopBar(QFrame):
             avatar_lbl.setAlignment(Qt.AlignCenter)
             avatar_lbl.setToolTip(self._username)
             avatar_lbl.setStyleSheet(f"""
-                background: {_glass_dark(160)};
+                background: {glass_bg_dark(160)};
                 color: {COLORS['seafoam']};
                 font-family: "{FONTS['mono']}";
                 font-size: 9px;
@@ -206,8 +189,8 @@ class TopBar(QFrame):
                 border: 1px solid transparent; border-radius: 8px; font-size: 13px;
             }}
             QPushButton:hover {{
-                background: {_glass_dark(160)}; color: {COLORS['seafoam']};
-                border: 1px solid {_edge()};
+                background: {glass_bg_dark(160)}; color: {COLORS['seafoam']};
+                border: 1px solid {glass_edge()};
             }}
         """)
         fs_btn.clicked.connect(self._on_fs_clicked)
@@ -341,9 +324,9 @@ class DesktopWallpaper(QWidget):
         # ── Glass clock / greeting card (top-left) ──
         card = QFrame()
         card.setStyleSheet(f"""
-            background: {_glass(170)};
-            border: 1px solid {_edge()};
-            border-top: 1px solid {_sheen()};
+            background: {glass_bg(170)};
+            border: 1px solid {glass_edge()};
+            border-top: 1px solid {glass_sheen()};
             border-radius: 18px;
         """)
         card_layout = QVBoxLayout(card)
@@ -442,9 +425,9 @@ class DesktopWallpaper(QWidget):
         menu = QMenu(self)
         menu.setStyleSheet(f"""
             QMenu {{
-                background-color: {_glass(220)};
+                background-color: {glass_bg(220)};
                 color: {COLORS['hd_white']};
-                border: 1px solid {_edge()};
+                border: 1px solid {glass_edge()};
                 border-radius: 10px;
                 padding: 6px 0;
             }}
@@ -458,7 +441,7 @@ class DesktopWallpaper(QWidget):
                 color: {COLORS['seafoam']};
             }}
             QMenu::separator {{
-                height: 1px; background: {_edge()}; margin: 4px 12px;
+                height: 1px; background: {glass_edge()}; margin: 4px 12px;
             }}
         """)
 
@@ -657,7 +640,7 @@ class DockButton(QToolButton):
                     border-radius: 14px;
                 }}
                 QToolButton:hover {{
-                    background: {_sheen()};
+                    background: {glass_sheen()};
                     border: 1px solid {hex_to_rgba(COLORS['seafoam'], 70)};
                 }}
                 QToolButton:pressed {{
@@ -695,9 +678,9 @@ class SystemDock(QFrame):
         self.setFixedHeight(66)
         self.setStyleSheet(f"""
             #systemDock {{
-                background: {_glass(190)};
-                border: 1px solid {_edge()};
-                border-top: 1px solid {_sheen()};
+                background: {glass_bg(190)};
+                border: 1px solid {glass_edge()};
+                border-top: 1px solid {glass_sheen()};
                 border-radius: {DOCK_RADIUS}px;
             }}
         """)
@@ -713,9 +696,9 @@ class SystemDock(QFrame):
         lp_btn.setCursor(Qt.PointingHandCursor)
         lp_btn.setStyleSheet(f"""
             QPushButton {{
-                background: {_glass_dark(140)};
+                background: {glass_bg_dark(140)};
                 color: {COLORS['seafoam']};
-                border: 1px solid {_edge()};
+                border: 1px solid {glass_edge()};
                 border-radius: 14px;
                 font-size: 20px;
             }}
@@ -738,7 +721,7 @@ class SystemDock(QFrame):
         # ── Date / time chip ──
         chip = QFrame()
         chip.setStyleSheet(
-            f"background: {_glass_dark(140)}; border-radius: 12px;"
+            f"background: {glass_bg_dark(140)}; border-radius: 12px;"
         )
         chip_layout = QVBoxLayout(chip)
         chip_layout.setContentsMargins(12, 2, 12, 2)
@@ -775,7 +758,7 @@ class SystemDock(QFrame):
     def _separator(self) -> QFrame:
         sep = QFrame()
         sep.setFixedSize(1, 36)
-        sep.setStyleSheet(f"background: {_sheen()};")
+        sep.setStyleSheet(f"background: {glass_sheen()};")
         return sep
 
     def _tick_chip(self):
@@ -824,9 +807,9 @@ class LaunchpadOverlay(QFrame):
 
         panel = QFrame()
         panel.setStyleSheet(f"""
-            background: {_glass(235)};
-            border: 1px solid {_edge()};
-            border-top: 1px solid {_sheen()};
+            background: {glass_bg(235)};
+            border: 1px solid {glass_edge()};
+            border-top: 1px solid {glass_sheen()};
             border-radius: 22px;
         """)
         panel.setMinimumWidth(760)
@@ -850,9 +833,9 @@ class LaunchpadOverlay(QFrame):
         self._search.setFixedHeight(40)
         self._search.setStyleSheet(f"""
             QLineEdit {{
-                background: {_glass_dark(150)};
+                background: {glass_bg_dark(150)};
                 color: {COLORS['hd_white']};
-                border: 1px solid {_edge()};
+                border: 1px solid {glass_edge()};
                 border-radius: 12px;
                 padding: 0 14px;
                 font-family: "{FONTS['ui']}";
@@ -891,7 +874,7 @@ class LaunchpadOverlay(QFrame):
             tile.setToolTip(f"{entry.name}\n{entry.description}")
             tile.setStyleSheet(f"""
                 QToolButton {{
-                    background: {_glass_dark(150)};
+                    background: {glass_bg_dark(150)};
                     color: {COLORS['text_secondary']};
                     border: 1px solid transparent;
                     border-radius: 16px;
@@ -1089,9 +1072,9 @@ class NautilusShell(QMainWindow):
         menu = QMenu()
         menu.setStyleSheet(f"""
             QMenu {{
-                background-color: {_glass(225)};
+                background-color: {glass_bg(225)};
                 color: {COLORS['hd_white']};
-                border: 1px solid {_edge()};
+                border: 1px solid {glass_edge()};
                 border-radius: 10px;
                 padding: 6px 0;
             }}
@@ -1105,7 +1088,7 @@ class NautilusShell(QMainWindow):
                 color: {COLORS['seafoam']};
             }}
             QMenu::separator {{
-                height: 1px; background: {_edge()}; margin: 4px 12px;
+                height: 1px; background: {glass_edge()}; margin: 4px 12px;
             }}
         """)
 

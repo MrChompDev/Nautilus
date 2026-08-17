@@ -52,6 +52,10 @@ try:
         SPACING,
         create_nautilus_palette,
         get_global_stylesheet,
+        glass_bg,
+        glass_bg_dark,
+        glass_edge,
+        glass_sheen,
     )
 except ImportError:
     COLORS = {
@@ -67,6 +71,13 @@ except ImportError:
     SPACING = {"xs": 2, "sm": 4, "md": 8, "lg": 12, "xl": 16, "xxl": 24}
     def get_global_stylesheet(): return ""
     def create_nautilus_palette(): return QPalette()
+    def hex_to_rgba(h, a=255):
+        v = h.lstrip("#")
+        return f"rgba({int(v[0:2],16)},{int(v[2:4],16)},{int(v[4:6],16)},{a})"
+    def glass_bg(a=180): return hex_to_rgba(COLORS["slate_navy"], a)
+    def glass_bg_dark(a=140): return hex_to_rgba(COLORS["deep_navy"], a)
+    def glass_edge(a=48): return hex_to_rgba(COLORS["seafoam"], a)
+    def glass_sheen(): return "rgba(238, 244, 248, 26)"
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -101,8 +112,8 @@ class FilePane(QWidget):
                 font-size: {FONTS['size_xs']}px;
                 font-weight: bold;
                 padding: 2px 6px;
-                border: 1px solid {COLORS['border']};
-                background-color: {COLORS['void_black']};
+                border: 1px solid {glass_edge()};
+                background-color: {glass_bg_dark()};
             }}
         """)
         path_bar.addWidget(self._path_label)
@@ -110,12 +121,13 @@ class FilePane(QWidget):
         self._path_input = QLineEdit()
         self._path_input.setStyleSheet(f"""
             QLineEdit {{
-                background-color: {COLORS['deep_navy']};
+                background-color: {glass_bg_dark()};
                 color: {COLORS['hd_white']};
-                border: 1px solid {COLORS['border']};
+                border: 1px solid {glass_edge()};
                 font-family: "{FONTS['mono']}";
                 font-size: {FONTS['size_sm']}px;
                 padding: 3px 8px;
+                border-radius: 6px;
             }}
         """)
         self._path_input.returnPressed.connect(self._on_path_entered)
@@ -134,9 +146,10 @@ class FilePane(QWidget):
         self._tree.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self._tree.setStyleSheet(f"""
             QTreeWidget {{
-                background-color: {COLORS['slate_navy']};
+                background-color: {glass_bg(100)};
                 color: {COLORS['hd_white']};
-                border: 1px solid {COLORS['border']};
+                border: 1px solid {glass_edge()};
+                border-radius: 12px;
                 font-family: "{FONTS['mono']}";
                 font-size: {FONTS['size_sm']}px;
             }}
@@ -150,8 +163,8 @@ class FilePane(QWidget):
                 font-size: {FONTS['size_xs']}px;
                 padding: 3px 6px;
                 border: none;
-                border-right: 1px solid {COLORS['border']};
-                border-bottom: 2px solid {COLORS['border']};
+                border-right: 1px solid {glass_edge()};
+                border-bottom: 2px solid {glass_edge()};
             }}
         """)
         self._tree.itemDoubleClicked.connect(self._on_item_double_click)
@@ -166,8 +179,8 @@ class FilePane(QWidget):
             font-family: "{FONTS['mono']}";
             font-size: {FONTS['size_xs']}px;
             padding: 2px 6px;
-            border-top: 1px solid {COLORS['border']};
-            background-color: {COLORS['deep_navy']};
+            border-top: 1px solid {glass_edge()};
+            background-color: {glass_bg_dark()};
         """)
         layout.addWidget(self._status)
 
@@ -259,7 +272,7 @@ class FilePane(QWidget):
         items = self._tree.selectedItems()
         menu = QMenu(self)
         menu.setStyleSheet(f"""
-            QMenu {{ background-color: {COLORS['slate_navy']}; color: {COLORS['hd_white']}; border: 1px solid {COLORS['border']}; }}
+            QMenu {{ background-color: {glass_bg()}; color: {COLORS['hd_white']}; border: 1px solid {glass_edge()}; border-radius: 8px; }}
             QMenu::item:selected {{ background-color: {COLORS['seafoam_deep']}; color: {COLORS['seafoam']}; }}
         """)
 
@@ -418,8 +431,8 @@ class FilePreview(QWidget):
         self._title.setStyleSheet(f"""
             color: {COLORS['seafoam']}; font-family: "{FONTS['mono']}";
             font-size: {FONTS['size_xs']}px; font-weight: bold; letter-spacing: 1px;
-            padding: 4px 8px; border-bottom: 1px solid {COLORS['border']};
-            background-color: {COLORS['void_black']};
+            padding: 4px 8px; border-bottom: 1px solid {glass_edge()};
+            background-color: {glass_bg_dark()};
         """)
         layout.addWidget(self._title)
 
@@ -427,9 +440,10 @@ class FilePreview(QWidget):
         self._content.setReadOnly(True)
         self._content.setStyleSheet(f"""
             QTextEdit {{
-                background-color: {COLORS['terminal_bg']};
+                background-color: {glass_bg_dark()};
                 color: {COLORS['hd_white']};
-                border: none;
+                border: 1px solid {glass_edge()};
+                border-radius: 12px;
                 font-family: "{FONTS['mono']}";
                 font-size: {FONTS['size_sm']}px;
             }}
@@ -487,6 +501,7 @@ class HarborWindow(QMainWindow):
 
     def _setup_ui(self):
         central = QWidget()
+        central.setStyleSheet(f"background-color: {glass_bg(100)};")
         self.setCentralWidget(central)
         main_layout = QVBoxLayout(central)
         main_layout.setContentsMargins(SPACING["md"], SPACING["md"], SPACING["md"], SPACING["md"])
@@ -497,7 +512,7 @@ class HarborWindow(QMainWindow):
         title.setStyleSheet(f"""
             color: {COLORS['seafoam']}; font-family: "{FONTS['mono']}";
             font-size: {FONTS['size_lg']}px; font-weight: bold; letter-spacing: 2px;
-            padding-bottom: 4px; border-bottom: 1px solid {COLORS['border']};
+            padding-bottom: 4px; border-bottom: 1px solid {glass_edge()};
         """)
         main_layout.addWidget(title)
 
@@ -510,12 +525,13 @@ class HarborWindow(QMainWindow):
             btn.setFixedSize(30, 26)
             btn.setStyleSheet(f"""
                 QPushButton {{
-                    background-color: {COLORS['slate_navy']};
+                    background-color: {glass_bg(120)};
                     color: {COLORS['text_secondary']};
-                    border: 1px solid {COLORS['border']};
+                    border: 1px solid {glass_edge()};
+                    border-radius: 6px;
                     font-size: 14px;
                 }}
-                QPushButton:hover {{ color: {COLORS['seafoam']}; border-color: {COLORS['seafoam_dim']}; }}
+                QPushButton:hover {{ color: {COLORS['seafoam']}; border-color: {COLORS['seafoam_dim']}; background-color: {glass_bg(160)}; }}
             """)
             nav.addWidget(btn)
 
@@ -530,7 +546,7 @@ class HarborWindow(QMainWindow):
 
         # Main splitter: left pane | right pane | preview
         splitter = QSplitter(Qt.Horizontal)
-        splitter.setStyleSheet(f"QSplitter::handle {{ background-color: {COLORS['border']}; width: 2px; }}")
+        splitter.setStyleSheet(f"QSplitter::handle {{ background-color: {glass_edge()}; width: 2px; }}")
 
         self._left_pane = FilePane("LEFT")
         self._right_pane = FilePane("RIGHT")
