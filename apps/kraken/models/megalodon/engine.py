@@ -53,6 +53,24 @@ VULN_PATTERNS = [
     {"id": "V012", "name": "XML parsing (XXE risk)", "severity": "medium",
      "pattern": r"xml\.etree\.ElementTree\.parse|xml\.dom\.minidom\.parse",
      "fix": "Use defusedxml library to prevent XXE attacks."},
+    {"id": "V013", "name": "Eval/exec usage", "severity": "critical",
+     "pattern": r"\beval\s*\(|\bexec\s*\(",
+     "fix": "Avoid eval/exec. Use ast.literal_eval() for safe evaluation."},
+    {"id": "V014", "name": "Insecure temp file", "severity": "medium",
+     "pattern": r"tempfile\.mktemp\(|open\('/tmp/",
+     "fix": "Use tempfile.mkstemp() or tempfile.NamedTemporaryFile() instead."},
+    {"id": "V015", "name": "HTTP without TLS", "severity": "medium",
+     "pattern": r"http://(?!localhost|127\.0\.0\.1|0\.0\.0\.0)",
+     "fix": "Use HTTPS for external connections."},
+    {"id": "V016", "name": "Hardcoded IP/hostname", "severity": "low",
+     "pattern": r"(?:192\.168|10\.0|172\.(?:1[6-9]|2[0-9]|3[01]))\.\d+\.\d+",
+     "fix": "Use environment variables or configuration files for hostnames."},
+    {"id": "V017", "name": " Disabled SSL verify", "severity": "high",
+     "pattern": r"verify\s*=\s*False|CERT_NONE|check_hostname\s*=\s*False",
+     "fix": "Enable SSL certificate verification in production."},
+    {"id": "V018", "name": "Unvalidated redirect", "severity": "medium",
+     "pattern": r"redirect\(|Redirect\(.*request\.(args|form)",
+     "fix": "Validate redirect URLs against a whitelist of allowed domains."},
 ]
 
 PORT_SCAN_COMMON = [21, 22, 25, 53, 80, 110, 143, 443, 993, 995, 3306, 3389, 5432, 8080, 8443]
@@ -96,6 +114,84 @@ def scan_directory(path: str) -> list[dict]:
     return findings
 
 
+def check_password_strength(password: str) -> dict:
+    """Analyze password strength and return score + feedback."""
+    score = 0
+    feedback = []
+
+    if len(password) >= 8:
+        score += 1
+    else:
+        feedback.append("Use at least 8 characters")
+    if len(password) >= 12:
+        score += 1
+    if len(password) >= 16:
+        score += 1
+
+    if any(c.isupper() for c in password):
+        score += 1
+    else:
+        feedback.append("Add uppercase letters")
+    if any(c.islower() for c in password):
+        score += 1
+    else:
+        feedback.append("Add lowercase letters")
+    if any(c.isdigit() for c in password):
+        score += 1
+    else:
+        feedback.append("Add numbers")
+    if any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password):
+        score += 1
+    else:
+        feedback.append("Add special characters (!@#$%^&*)")
+
+    # Check for common patterns
+    common = ["password", "123456", "qwerty", "abc123", "letmein", "admin", "welcome"]
+    if password.lower() in common:
+        score = 0
+        feedback = ["This is a commonly used password — avoid it!"]
+
+    if not feedback:
+        feedback.append("Strong password!")
+
+    levels = {0: "Very Weak", 1: "Weak", 2: "Fair", 3: "Good", 4: "Strong", 5: "Very Strong", 6: "Excellent", 7: "Excellent"}
+    return {
+        "score": score,
+        "max_score": 7,
+        "level": levels.get(score, "Unknown"),
+        "feedback": feedback,
+        "length": len(password),
+    }
+
+
+def check_dependencies(path: str) -> list[dict]:
+    """Check requirements files for unpinned versions."""
+    findings = []
+    req_files = ["requirements.txt", "requirements.in", "Pipfile"]
+    for req in req_files:
+        req_path = os.path.join(path, req)
+        if os.path.isfile(req_path):
+            result = file_read(req_path, limit=1000)
+            if not result.ok:
+                continue
+            for i, line in enumerate(result.output.splitlines(), 1):
+                line = line.strip()
+                if not line or line.startswith("#") or line.startswith("-"):
+                    continue
+                # Check for unpinned versions
+                if "==" not in line and ">=" not in line and "<=" not in line:
+                    findings.append({
+                        "vuln_id": "VDEP1",
+                        "name": "Unpinned dependency",
+                        "severity": "medium",
+                        "file": req,
+                        "line": i,
+                        "code": line,
+                        "fix": f"Pin version: {line}==x.y.z",
+                    })
+    return findings
+
+
 def port_check(host: str, port: int, timeout: float = 1.0) -> bool:
     """Quick TCP port check."""
     try:
@@ -114,33 +210,6 @@ def scan_ports(host: str, ports: list[int] | None = None) -> list[dict]:
         if port_check(host, port):
             open_ports.append({"port": port, "state": "open"})
     return open_ports
-
-
-def check_dependencies(path: str) -> list[dict]:
-    """Check for known vulnerable dependency patterns."""
-    findings = []
-    req_files = ["requirements.txt", "Pipfile", "pyproject.toml"]
-    for req in req_files:
-        fp = os.path.join(path, req)
-        if os.path.isfile(fp):
-            result = file_read(fp, limit=500)
-            if result.ok:
-                for line in result.output.split("\n"):
-                    line = line.strip()
-                    if not line or line.startswith("#"):
-                        continue
-                    # Check for pinned vs unpinned
-                    if "==" not in line and ">=" not in line and "<=" not in line:
-                        findings.append({
-                            "vuln_id": "D001",
-                            "name": "Unpinned dependency",
-                            "severity": "low",
-                            "file": fp,
-                            "line": 0,
-                            "code": line,
-                            "fix": f"Pin version: {line}==x.y.z",
-                        })
-    return findings
 
 
 # ── Megalodon engine ──────────────────────────────────────────────
@@ -178,6 +247,8 @@ class MegalodonEngine(BaseEngine):
             text = self._run_dep_check(ws)
         elif any(k in lower for k in ("full scan", "full audit", "security audit", "pentest")):
             text = self._run_full_audit(ws)
+        elif any(k in lower for k in ("password", "pass strength", "password strength")):
+            text = self._run_password_check(user_msg)
         elif any(k in lower for k in ("help", "what can", "commands")):
             text = self._help_text()
         else:
@@ -233,6 +304,41 @@ class MegalodonEngine(BaseEngine):
         parts.append(f"Total findings: {total}")
         parts.append(f"{'═' * 50}")
         return "\n".join(parts)
+
+    def _run_password_check(self, msg: str) -> str:
+        # Extract password from message
+        password = ""
+        for word in msg.split():
+            if word.startswith("password") and "=" in word:
+                password = word.split("=", 1)[1]
+            elif word.startswith("pass") and "=" in word:
+                password = word.split("=", 1)[1]
+        # Check for quoted password
+        import re
+        m = re.search(r'["\'](.+?)["\']', msg)
+        if m:
+            password = m.group(1)
+
+        if not password:
+            return (
+                "[Megalodon — Password Strength Check]\n\n"
+                "Usage: check password <your_password>\n"
+                "Example: check password MyStr0ng!Pass\n\n"
+                "I'll analyze the strength and provide feedback."
+            )
+
+        result = check_password_strength(password)
+        lines = [
+            "[Megalodon — Password Strength Check]\n",
+            f"Password: {'*' * len(password)} (length: {result['length']})",
+            f"Score: {result['score']}/{result['max_score']}",
+            f"Strength: {result['level']}",
+            "",
+            "Feedback:",
+        ]
+        for fb in result['feedback']:
+            lines.append(f"  - {fb}")
+        return "\n".join(lines)
 
     def _analyze_query(self, msg: str, ws: str) -> str:
         return (
