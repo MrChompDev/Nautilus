@@ -1,8 +1,12 @@
 {
   "id": "kraken",
-  "profile": "medium",
-  "params": 1214720,
-  "steps": 400,
-  "tokens": 352944,
-  "trained": "2026-08-18 17:35:22"
+  "profile": "full",
+  "params": 35931136,
+  "int8_bytes": 35931136,
+  "val_loss": 5.5956211884816485,
+  "best_val_loss": 5.577540922164917,
+  "steps": 500,
+  "tokens": 624702,
+  "trained": "2026-08-19 02:41:08",
+  "wall_seconds": 6204
 }

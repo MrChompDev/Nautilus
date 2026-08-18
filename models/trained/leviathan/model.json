@@ -1,8 +1,12 @@
 {
   "id": "leviathan",
-  "profile": "medium",
-  "params": 1214720,
-  "steps": 400,
-  "tokens": 63055,
-  "trained": "2026-08-18 17:36:22"
+  "profile": "full",
+  "params": 35931136,
+  "int8_bytes": 35931136,
+  "val_loss": 6.180061848958333,
+  "best_val_loss": 6.168849452336629,
+  "steps": 500,
+  "tokens": 550582,
+  "trained": "2026-08-19 04:25:25",
+  "wall_seconds": 6227
 }

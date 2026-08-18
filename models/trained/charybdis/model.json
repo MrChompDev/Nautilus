@@ -1,8 +1,12 @@
 {
   "id": "charybdis",
-  "profile": "medium",
-  "params": 1214720,
-  "steps": 400,
-  "tokens": 47476,
-  "trained": "2026-08-18 17:38:25"
+  "profile": "full",
+  "params": 35931136,
+  "int8_bytes": 35931136,
+  "val_loss": 5.586118984222412,
+  "best_val_loss": 5.587037086486816,
+  "steps": 500,
+  "tokens": 626501,
+  "trained": "2026-08-19 06:09:19",
+  "wall_seconds": 6214
 }
