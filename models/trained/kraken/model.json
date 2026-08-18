@@ -1,10 +1,8 @@
 {
   "id": "kraken",
-  "profile": "tiny",
-  "params": 201344,
-  "int8_bytes": 201344,
-  "val_loss": 6.24673859278361,
-  "steps": 80,
-  "tokens": 200000,
-  "trained": "2026-08-18 06:53:13"
+  "profile": "medium",
+  "params": 1214720,
+  "steps": 400,
+  "tokens": 352944,
+  "trained": "2026-08-18 17:35:22"
 }
