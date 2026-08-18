@@ -1,21 +1,22 @@
-"""Kraken AI — ChatGPT-style chat panel.
+"""Kraken AI — Chat panel with model dropdown in input bar.
 
-Message bubbles, streaming, typing indicator, markdown-ish rendering.
+Message bubbles, streaming, typing indicator, model selector combo.
+Layout follows Claude/ChatGPT pattern: full-width messages that wrap.
 """
 
 from __future__ import annotations
 
-import html
 import time
 
-from PySide6.QtCore import Qt, Signal, QTimer, QPropertyAnimation, QEasingCurve
-from PySide6.QtGui import QTextCursor
+from PySide6.QtCore import Qt, Signal, QTimer, QSize
 from PySide6.QtWidgets import (
+    QComboBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
     QPushButton,
     QScrollArea,
+    QSizePolicy,
     QVBoxLayout,
     QWidget,
 )
@@ -73,104 +74,107 @@ class TypingIndicator(QWidget):
 
 
 class MessageBubble(QWidget):
-    """A single chat message bubble."""
+    """A single chat message bubble — Claude-style full-width layout."""
 
-    def __init__(self, role: str, text: str, color: str = "#EEF4F8", creature_color: str = "#00F2C2", parent=None):
+    def __init__(self, role: str, text: str, color: str = "#EEF4F8",
+                 creature_color: str = "#00F2C2", creature_name: str = "Kraken",
+                 parent=None):
         super().__init__(parent)
         self._role = role
         self._creature_color = creature_color
-        self._build(role, text, color, creature_color)
+        self._body_label: QLabel | None = None
+        self._build(role, text, color, creature_color, creature_name)
 
-    def _build(self, role: str, text: str, color: str, creature_color: str):
+    def _build(self, role: str, text: str, color: str, creature_color: str, creature_name: str):
         lay = QVBoxLayout(self)
-        lay.setContentsMargins(0, 2, 0, 2)
+        lay.setContentsMargins(0, 4, 0, 4)
+        lay.setSpacing(0)
 
         if role == "user":
-            # User message — right-aligned bubble
-            lay.addStretch(1)
+            # User message — right-aligned, colored bubble
+            row = QHBoxLayout()
+            row.setContentsMargins(0, 0, 0, 0)
+            row.addStretch(1)
+
             container = QWidget()
             container.setStyleSheet(f"""
                 background: {creature_color}15;
                 border: 1px solid {creature_color}25;
                 border-radius: 16px 16px 4px 16px;
             """)
-            container_lay = QVBoxLayout(container)
-            container_lay.setContentsMargins(16, 12, 16, 10)
+            container.setMaximumWidth(520)
+            cl = QVBoxLayout(container)
+            cl.setContentsMargins(16, 12, 16, 10)
 
             body = QLabel(text)
             body.setWordWrap(True)
             body.setTextInteractionFlags(Qt.TextSelectableByMouse)
-            body.setStyleSheet(f"color: {color}; font-size: 13px; background: transparent; border: none; line-height: 1.4;")
-            container_lay.addWidget(body)
+            body.setStyleSheet(f"color: #FFFFFF; font-size: 13px; background: transparent; border: none;")
+            cl.addWidget(body)
 
             ts = QLabel(time.strftime("%H:%M"))
             ts.setAlignment(Qt.AlignRight)
             ts.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: 9px; background: transparent; border: none; padding-top: 4px;")
-            container_lay.addWidget(ts)
+            cl.addWidget(ts)
 
-            row = QHBoxLayout()
-            row.setContentsMargins(80, 0, 16, 0)
+            row.addWidget(container)
             row.addStretch(1)
-            row.addWidget(container, 4)
             lay.addLayout(row)
 
         else:
-            # Assistant message — left-aligned
-            header_lay = QHBoxLayout()
-            header_lay.setContentsMargins(40, 0, 0, 2)
-            header_lay.setSpacing(6)
+            # Assistant message — full width, left-aligned, like Claude
+            header = QHBoxLayout()
+            header.setContentsMargins(40, 0, 20, 4)
+            header.setSpacing(8)
 
-            # Avatar circle
-            avatar = QLabel(creature_color[1].upper() if creature_color.startswith("#") else "?")
-            avatar.setFixedSize(24, 24)
+            avatar = QLabel(creature_name[0] if creature_name else "?")
+            avatar.setFixedSize(26, 26)
             avatar.setAlignment(Qt.AlignCenter)
             avatar.setStyleSheet(f"""
                 background: {creature_color}22; border: 1px solid {creature_color}44;
-                border-radius: 12px; color: {creature_color}; font-size: 11px; font-weight: bold;
+                border-radius: 13px; color: {creature_color}; font-size: 12px; font-weight: bold;
             """)
-            header_lay.addWidget(avatar)
+            header.addWidget(avatar)
 
-            name = QLabel("Kraken")
-            name.setStyleSheet(f"color: {creature_color}; font-size: 11px; font-weight: bold; background: transparent; border: none;")
-            header_lay.addWidget(name)
-            header_lay.addStretch(1)
+            name_lbl = QLabel(creature_name)
+            name_lbl.setStyleSheet(f"color: {creature_color}; font-size: 12px; font-weight: bold; background: transparent; border: none;")
+            header.addWidget(name_lbl)
+            header.addStretch(1)
+            lay.addLayout(header)
 
-            lay.addLayout(header_lay)
-
-            container = QWidget()
-            container.setStyleSheet("background: transparent;")
-            container_lay = QVBoxLayout(container)
-            container_lay.setContentsMargins(40, 0, 60, 0)
-
+            # Body — full width, text wraps naturally like Claude
             body = QLabel(text)
             body.setWordWrap(True)
             body.setTextInteractionFlags(Qt.TextSelectableByMouse)
-            body.setStyleSheet(f"color: {color}; font-size: 13px; background: transparent; border: none; line-height: 1.5;")
-            container_lay.addWidget(body)
+            body.setStyleSheet(
+                f"color: #FFFFFF; font-size: 13px; "
+                f"background: transparent; border: none; padding: 0 40px 0 40px;"
+            )
+            lay.addWidget(body, 1)
+            self._body_label = body
 
             ts = QLabel(time.strftime("%H:%M"))
-            ts.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: 9px; background: transparent; border: none; padding-top: 2px;")
-            container_lay.addWidget(ts)
-
-            lay.addWidget(container)
+            ts.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: 9px; background: transparent; border: none; padding: 4px 40px 0 40px;")
+            lay.addWidget(ts)
 
     def append_text(self, text: str):
-        labels = self.findChildren(QLabel)
-        if len(labels) >= 2:
-            body = labels[1]
-            current = body.text()
-            body.setText(current + text)
+        if self._body_label:
+            self._body_label.setText(self._body_label.text() + text)
 
 
 class ChatPanel(QWidget):
-    """Full chat panel with scroll area + input bar."""
+    """Full chat panel with scroll area + input bar with model dropdown."""
 
     submitted = Signal(str)
     stop_clicked = Signal()
+    creature_changed = Signal(str)
 
-    def __init__(self, creature_color: str = "#00F2C2", parent=None):
+    def __init__(self, creatures: dict | None = None,
+                 creature_id: str = "kraken", parent=None):
         super().__init__(parent)
-        self._creature_color = creature_color
+        self._creatures = creatures or {}
+        self._creature_id = creature_id
+        self._creature_color = self._creatures.get(creature_id, {}).get("color", "#00F2C2")
         self._streaming = False
         self._current_bubble: MessageBubble | None = None
         self._typing: TypingIndicator | None = None
@@ -181,7 +185,7 @@ class ChatPanel(QWidget):
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
 
-        # Scroll area for messages
+        # Scroll area for messages — fills the entire chat area
         self._scroll = QScrollArea()
         self._scroll.setWidgetResizable(True)
         self._scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -190,8 +194,8 @@ class ChatPanel(QWidget):
         self._messages = QWidget()
         self._messages.setStyleSheet("background: transparent;")
         self._msg_lay = QVBoxLayout(self._messages)
-        self._msg_lay.setContentsMargins(20, 20, 20, 20)
-        self._msg_lay.setSpacing(4)
+        self._msg_lay.setContentsMargins(0, 0, 0, 0)
+        self._msg_lay.setSpacing(0)
         self._msg_lay.addStretch(1)
 
         self._scroll.setWidget(self._messages)
@@ -209,30 +213,31 @@ class ChatPanel(QWidget):
         input_frame = QWidget()
         input_frame.setStyleSheet(f"background: {glass_bg_dark(220)}; border-top: 1px solid {glass_edge()};")
         input_lay = QHBoxLayout(input_frame)
-        input_lay.setContentsMargins(24, 14, 24, 14)
-        input_lay.setSpacing(10)
+        input_lay.setContentsMargins(20, 14, 20, 14)
+        input_lay.setSpacing(8)
 
+        # Model dropdown
+        self._model_combo = QComboBox()
+        self._model_combo.setFixedWidth(160)
+        self._model_combo.setFixedHeight(40)
+        for cid, meta in self._creatures.items():
+            self._model_combo.addItem(meta.get("name", cid), cid)
+        idx = self._model_combo.findData(self._creature_id)
+        if idx >= 0:
+            self._model_combo.setCurrentIndex(idx)
+        self._model_combo.setStyleSheet(self._combo_style(self._creature_color))
+        self._model_combo.currentIndexChanged.connect(self._on_creature_changed)
+        input_lay.addWidget(self._model_combo)
+
+        # Text input
         self._input = QLineEdit()
         self._input.setPlaceholderText("Send a message...")
         self._input.setMinimumHeight(46)
-        self._input.setStyleSheet(f"""
-            QLineEdit {{
-                background: {glass_bg(120)};
-                color: {COLORS['hd_white']};
-                border: 1px solid {glass_edge(60)};
-                border-radius: 23px;
-                padding: 11px 20px;
-                font-size: 14px;
-                font-family: '{FONTS.get('ui', 'sans-serif')}';
-            }}
-            QLineEdit:focus {{
-                border: 1px solid {self._creature_color};
-                background: {glass_bg(150)};
-            }}
-        """)
+        self._input.setStyleSheet(self._input_style(self._creature_color))
         self._input.returnPressed.connect(self._on_submit)
         input_lay.addWidget(self._input, 1)
 
+        # Send button
         self._send_btn = QPushButton("\u27a4")
         self._send_btn.setFixedSize(46, 46)
         self._send_btn.setCursor(Qt.PointingHandCursor)
@@ -240,6 +245,7 @@ class ChatPanel(QWidget):
         self._send_btn.clicked.connect(self._on_submit)
         input_lay.addWidget(self._send_btn)
 
+        # Stop button
         self._stop_btn = QPushButton("\u25a0")
         self._stop_btn.setFixedSize(46, 46)
         self._stop_btn.setCursor(Qt.PointingHandCursor)
@@ -256,6 +262,39 @@ class ChatPanel(QWidget):
 
         lay.addWidget(input_frame)
 
+    def _combo_style(self, color: str) -> str:
+        return f"""
+            QComboBox {{
+                background: {glass_bg(120)}; color: {color};
+                border: 1px solid {color}66; border-radius: 8px;
+                padding: 6px 12px; font-size: 12px; font-weight: bold;
+                font-family: '{FONTS.get('ui', 'sans-serif')}';
+            }}
+            QComboBox:hover {{ border: 1px solid {color}; }}
+            QComboBox::drop-down {{ border: none; width: 24px; }}
+            QComboBox::down-arrow {{
+                image: none; border-left: 4px solid transparent;
+                border-right: 4px solid transparent; border-top: 6px solid {color};
+                margin-right: 8px;
+            }}
+            QComboBox QAbstractItemView {{
+                background: {COLORS['deep_navy']}; color: {COLORS['hd_white']};
+                border: 1px solid {color}44; border-radius: 6px;
+                selection-background-color: {color}22; padding: 4px;
+            }}
+        """
+
+    def _input_style(self, color: str) -> str:
+        return f"""
+            QLineEdit {{
+                background: {glass_bg(120)}; color: {COLORS['hd_white']};
+                border: 1px solid {glass_edge(60)}; border-radius: 23px;
+                padding: 11px 20px; font-size: 14px;
+                font-family: '{FONTS.get('ui', 'sans-serif')}';
+            }}
+            QLineEdit:focus {{ border: 1px solid {color}; background: {glass_bg(150)}; }}
+        """
+
     def _send_style(self, color: str) -> str:
         return f"""
             QPushButton {{
@@ -271,11 +310,10 @@ class ChatPanel(QWidget):
         lay = QVBoxLayout(welcome)
         lay.setAlignment(Qt.AlignCenter)
 
-        # Logo
+        color = self._creature_color
         logo = QLabel("?")
         logo.setFixedSize(80, 80)
         logo.setAlignment(Qt.AlignCenter)
-        color = self._creature_color
         logo.setStyleSheet(f"""
             background: {color}15; border: 2px solid {color}30;
             border-radius: 40px; color: {color}; font-size: 36px; font-weight: bold;
@@ -288,38 +326,35 @@ class ChatPanel(QWidget):
         title.setStyleSheet(f"color: {COLORS['hd_white']}; font-size: 26px; font-weight: bold; background: transparent; border: none;")
         lay.addWidget(title)
 
-        subtitle = QLabel("Choose a model on the left, then type your message below.")
+        subtitle = QLabel("Select a model from the dropdown below, then type your message.")
         subtitle.setAlignment(Qt.AlignCenter)
         subtitle.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 13px; background: transparent; border: none;")
         lay.addWidget(subtitle)
 
-        lay.addSpacing(24)
-
-        # Quick action cards
-        cards_lay = QHBoxLayout()
-        cards_lay.setSpacing(12)
-        cards_lay.setAlignment(Qt.AlignCenter)
-
-        for label, hint in [("Code", "Write or debug code"), ("Write", "Draft prose or docs"), ("Visual", "Generate an image"), ("Scan", "Security audit")]:
-            card = QPushButton(f"{label}\n{hint}")
-            card.setFixedSize(120, 60)
-            card.setCursor(Qt.PointingHandCursor)
-            card.setStyleSheet(f"""
-                QPushButton {{
-                    background: {glass_bg(80)}; color: {COLORS['text_secondary']};
-                    border: 1px solid {glass_edge(30)}; border-radius: 10px;
-                    font-size: 10px; padding: 8px;
-                }}
-                QPushButton:hover {{
-                    background: {glass_bg(120)}; border: 1px solid {glass_edge(50)};
-                    color: {COLORS['hd_white']};
-                }}
-            """)
-            cards_lay.addWidget(card)
-
-        lay.addLayout(cards_lay)
-
         return welcome
+
+    def _on_creature_changed(self, index: int):
+        cid = self._model_combo.currentData()
+        if cid and cid != self._creature_id:
+            self._creature_id = cid
+            self._creature_color = self._creatures.get(cid, {}).get("color", "#00F2C2")
+            self._apply_color()
+            self.creature_changed.emit(cid)
+
+    def _apply_color(self):
+        c = self._creature_color
+        self._send_btn.setStyleSheet(self._send_style(c))
+        self._input.setStyleSheet(self._input_style(c))
+        self._model_combo.setStyleSheet(self._combo_style(c))
+        if self._typing:
+            self._typing.set_color(c)
+        if hasattr(self, "_welcome"):
+            logos = self._welcome.findChildren(QLabel)
+            if logos:
+                logos[0].setStyleSheet(f"""
+                    background: {c}15; border: 2px solid {c}30;
+                    border-radius: 40px; color: {c}; font-size: 36px; font-weight: bold;
+                """)
 
     def _on_submit(self):
         text = self._input.text().strip()
@@ -333,17 +368,7 @@ class ChatPanel(QWidget):
 
     def set_creature_color(self, color: str):
         self._creature_color = color
-        self._send_btn.setStyleSheet(self._send_style(color))
-        if self._typing:
-            self._typing.set_color(color)
-        # Update welcome logo
-        if hasattr(self, "_welcome"):
-            logos = self._welcome.findChildren(QLabel)
-            if logos:
-                logos[0].setStyleSheet(f"""
-                    background: {color}15; border: 2px solid {color}30;
-                    border-radius: 40px; color: {color}; font-size: 36px; font-weight: bold;
-                """)
+        self._apply_color()
 
     # ── Message helpers ──────────────────────────────────────────
 
@@ -360,19 +385,17 @@ class ChatPanel(QWidget):
         self._streaming = True
         self._send_btn.setVisible(False)
         self._stop_btn.setVisible(True)
-        # Show typing indicator briefly
+        # Create bubble immediately — no timer delay
         self._typing.set_color(self._creature_color)
-        self._msg_lay.insertWidget(self._msg_lay.count() - 1, self._typing)
-        self._typing.show()
-        self._scroll_to_bottom()
-        # Replace with bubble after a short delay
-        QTimer.singleShot(300, self._start_bubble)
-
-    def _start_bubble(self):
-        self._typing.hide()
-        self._current_bubble = MessageBubble("assistant", "", creature_color=self._creature_color)
+        name = self._creatures.get(self._creature_id, {}).get("name", "Kraken")
+        self._current_bubble = MessageBubble(
+            "assistant", "", creature_color=self._creature_color, creature_name=name,
+        )
         self._msg_lay.insertWidget(self._msg_lay.count() - 1, self._current_bubble)
         self._scroll_to_bottom()
+
+    def _start_bubble(self):
+        pass  # kept for compatibility — bubble is created in assistant_begin now
 
     def assistant_delta(self, text: str):
         if self._current_bubble:
@@ -415,3 +438,6 @@ class ChatPanel(QWidget):
     def _scroll_to_bottom(self):
         sb = self._scroll.verticalScrollBar()
         sb.setValue(sb.maximum())
+        # Double-buffer: ensure scroll reaches bottom after layout updates
+        QTimer.singleShot(10, lambda: sb.setValue(sb.maximum()))
+        QTimer.singleShot(50, lambda: sb.setValue(sb.maximum()))

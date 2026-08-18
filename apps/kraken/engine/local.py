@@ -50,9 +50,8 @@ def load_lm(model_id: str):
         path = os.path.join(_TRAINED_DIR, model_id)
         if not os.path.isfile(os.path.join(path, "weights.npz")):
             raise FileNotFoundError(f"local model {model_id!r} not trained (see models/lm/train.py)")
-        from models.lm.engine import LM
-
-        lm = LM(path)
+        from apps.kraken.core.lm_loader import load_lm as _load_lm
+        lm = _load_lm(path)
         _CACHE[model_id] = lm
         return lm
 

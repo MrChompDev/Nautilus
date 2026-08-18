@@ -1,7 +1,7 @@
 """Kraken AI — main desktop window.
 
-ChatGPT/Claude-style layout with deep sea creature theming.
-Features: creature selector, conversation history, settings, export.
+Clean layout: top bar + full-width chat with model dropdown in input bar.
+No sidebar — model selection is a dropdown next to the send button.
 """
 
 from __future__ import annotations
@@ -12,23 +12,17 @@ import queue
 import threading
 import time
 
-from PySide6.QtCore import Qt, QTimer, QPropertyAnimation, QEasingCurve
-from PySide6.QtGui import QKeySequence, QShortcut, QAction, QIcon
+from PySide6.QtCore import Qt, QTimer
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
-    QApplication,
     QComboBox,
     QDialog,
     QFileDialog,
-    QGroupBox,
     QHBoxLayout,
     QLabel,
-    QLineEdit,
     QMainWindow,
-    QMessageBox,
     QPushButton,
-    QScrollArea,
     QSlider,
-    QSplitter,
     QVBoxLayout,
     QWidget,
 )
@@ -37,7 +31,6 @@ from apps.kraken.core.config import CREATURES, KrakenConfig
 from apps.kraken.core.memory import MemoryStore
 from apps.kraken.core.models import ModelRegistry
 from apps.kraken.ui.chat_panel import ChatPanel
-from apps.kraken.ui.creature_selector import CreatureSelector
 
 try:
     from core.theme import COLORS, FONTS, glass_bg, glass_bg_dark, glass_edge
@@ -103,7 +96,7 @@ class EngineWorker:
 
 
 class KrakenWindow(QMainWindow):
-    """Kraken AI desktop app — deep sea creature themed."""
+    """Kraken AI desktop app — model dropdown in input bar, no sidebar."""
 
     def __init__(self, cfg: KrakenConfig):
         super().__init__()
@@ -114,23 +107,21 @@ class KrakenWindow(QMainWindow):
 
         self._current_creature = cfg.get("creature", "kraken")
         self._chat_history: list[dict] = []
-        self._conversations: list[dict] = []  # {name, creature, messages, ts}
+        self._conversations: list[dict] = []
         self._conv_index = -1
 
         self.setWindowTitle("Kraken AI")
-        self.resize(1280, 820)
-        self.setMinimumSize(900, 600)
+        self.resize(1100, 780)
+        self.setMinimumSize(700, 500)
         self.setStyleSheet(f"background: {COLORS['abyss_navy']}; color: {COLORS['hd_white']};")
 
         self._build_ui()
         self._bind_shortcuts()
 
-        # Event polling
         self._poll = QTimer(self)
         self._poll.timeout.connect(self._drain_events)
         self._poll.start(80)
 
-        # Status timer
         self._status_timer = QTimer(self)
         self._status_timer.timeout.connect(self._update_status)
         self._status_timer.start(2000)
@@ -140,31 +131,20 @@ class KrakenWindow(QMainWindow):
     def _build_ui(self):
         root = QWidget()
         self.setCentralWidget(root)
-        lay = QHBoxLayout(root)
+        lay = QVBoxLayout(root)
         lay.setContentsMargins(0, 0, 0, 0)
         lay.setSpacing(0)
 
-        # Left sidebar — creature selector + history
-        self._sidebar = self._build_sidebar()
-        lay.addWidget(self._sidebar)
-
-        # Right — chat area
-        right = QWidget()
-        right_lay = QVBoxLayout(right)
-        right_lay.setContentsMargins(0, 0, 0, 0)
-        right_lay.setSpacing(0)
-
         # Top bar
         self._top_bar = self._build_top_bar()
-        right_lay.addWidget(self._top_bar)
+        lay.addWidget(self._top_bar)
 
-        # Chat
-        self._chat = ChatPanel()
+        # Chat panel (includes input bar with model dropdown)
+        self._chat = ChatPanel(creatures=CREATURES, creature_id=self._current_creature)
         self._chat.submitted.connect(self._on_submit)
         self._chat.stop_clicked.connect(self.worker.stop)
-        right_lay.addWidget(self._chat, 1)
-
-        lay.addWidget(right, 1)
+        self._chat.creature_changed.connect(self._select_creature)
+        lay.addWidget(self._chat, 1)
 
         # Status bar
         self.statusBar().setStyleSheet(
@@ -177,74 +157,6 @@ class KrakenWindow(QMainWindow):
         )
         self._update_status()
 
-    def _build_sidebar(self) -> QWidget:
-        sidebar = QWidget()
-        sidebar.setMinimumWidth(240)
-        sidebar.setMaximumWidth(280)
-        sidebar.setStyleSheet("background: rgba(5, 13, 20, 220); border-right: 1px solid rgba(0, 242, 194, 30);")
-        lay = QVBoxLayout(sidebar)
-        lay.setContentsMargins(12, 12, 12, 8)
-        lay.setSpacing(6)
-
-        # New Chat button
-        new_btn = QPushButton("+ New Chat")
-        new_btn.setCursor(Qt.PointingHandCursor)
-        new_btn.setFixedHeight(36)
-        new_btn.setStyleSheet(f"""
-            QPushButton {{
-                background: {glass_bg(140)}; color: {COLORS['seafoam']};
-                border: 1px solid {glass_edge(60)}; border-radius: 8px;
-                font-size: 12px; font-weight: bold; padding: 0 12px;
-            }}
-            QPushButton:hover {{ background: {glass_bg(180)}; border: 1px solid {glass_edge(80)}; }}
-        """)
-        new_btn.clicked.connect(self._new_conversation)
-        lay.addWidget(new_btn)
-
-        # Model selector label
-        models_label = QLabel("MODELS")
-        models_label.setStyleSheet(
-            f"color: {COLORS['seafoam']}; font-size: 10px; font-weight: bold; "
-            f"letter-spacing: 2px; padding: 8px 0 4px 0; background: transparent; border: none;"
-        )
-        lay.addWidget(models_label)
-
-        # Creature selector
-        self._selector = CreatureSelector()
-        self._selector.creature_selected.connect(self._select_creature)
-        self._selector.setMaximumHeight(380)
-        lay.addWidget(self._selector)
-
-        # History label
-        hist_label = QLabel("HISTORY")
-        hist_label.setStyleSheet(
-            f"color: {COLORS['text_muted']}; font-size: 10px; font-weight: bold; "
-            f"letter-spacing: 2px; padding: 8px 0 4px 0; background: transparent; border: none;"
-        )
-        lay.addWidget(hist_label)
-
-        # History list
-        self._history_scroll = QScrollArea()
-        self._history_scroll.setWidgetResizable(True)
-        self._history_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
-        self._history_scroll.setStyleSheet("QScrollArea { background: transparent; border: none; }")
-        self._history_container = QWidget()
-        self._history_container.setStyleSheet("background: transparent;")
-        self._history_lay = QVBoxLayout(self._history_container)
-        self._history_lay.setContentsMargins(0, 0, 0, 0)
-        self._history_lay.setSpacing(2)
-        self._history_lay.addStretch(1)
-        self._history_scroll.setWidget(self._history_container)
-        lay.addWidget(self._history_scroll, 1)
-
-        # Footer
-        footer = QLabel("Kraken AI v2.0")
-        footer.setAlignment(Qt.AlignCenter)
-        footer.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: 9px; padding: 4px; background: transparent; border: none;")
-        lay.addWidget(footer)
-
-        return sidebar
-
     def _build_top_bar(self) -> QWidget:
         bar = QWidget()
         bar.setFixedHeight(54)
@@ -252,52 +164,49 @@ class KrakenWindow(QMainWindow):
         lay = QHBoxLayout(bar)
         lay.setContentsMargins(20, 0, 20, 0)
 
-        # Creature icon (colored circle)
+        # Creature icon circle
         self._icon_frame = QLabel()
         self._icon_frame.setFixedSize(36, 36)
         self._icon_frame.setAlignment(Qt.AlignCenter)
         self._update_icon()
         lay.addWidget(self._icon_frame)
 
-        # Creature name + subtitle
+        # Name + subtitle
         text_col = QVBoxLayout()
         text_col.setSpacing(0)
         text_col.setContentsMargins(0, 0, 0, 0)
         self._creature_name = QLabel("Kraken")
-        self._creature_name.setStyleSheet("color: #00F2C2; font-size: 16px; font-weight: bold; background: transparent; border: none;")
+        self._creature_name.setStyleSheet(
+            f"color: {COLORS['seafoam']}; font-size: 16px; font-weight: bold; "
+            f"background: transparent; border: none;"
+        )
         text_col.addWidget(self._creature_name)
         self._creature_subtitle = QLabel("Code from the Deep")
-        self._creature_subtitle.setStyleSheet("color: #8BA4B8; font-size: 10px; background: transparent; border: none;")
+        self._creature_subtitle.setStyleSheet(
+            f"color: {COLORS['text_secondary']}; font-size: 10px; "
+            f"background: transparent; border: none;"
+        )
         text_col.addWidget(self._creature_subtitle)
         lay.addLayout(text_col)
 
         lay.addStretch(1)
 
-        # Keyboard shortcut hints
-        hints = QLabel("Ctrl+L Clear  /  Esc Stop  /  Ctrl+N New")
-        hints.setStyleSheet(f"color: {COLORS['text_muted']}; font-size: 9px; background: transparent; border: none;")
+        # Shortcut hints
+        hints = QLabel("Ctrl+L Clear  |  Esc Stop  |  Ctrl+N New  |  Ctrl+E Export")
+        hints.setStyleSheet(
+            f"color: {COLORS['text_muted']}; font-size: 9px; "
+            f"background: transparent; border: none;"
+        )
         lay.addWidget(hints)
 
         lay.addSpacing(12)
 
-        # Export button
-        export_btn = self._icon_button("Export", "\u2b07")
-        export_btn.clicked.connect(self._export_chat)
-        lay.addWidget(export_btn)
-
         # Settings button
-        settings_btn = self._icon_button("Settings", "\u2699")
-        settings_btn.clicked.connect(self._open_settings)
-        lay.addWidget(settings_btn)
-
-        return bar
-
-    def _icon_button(self, tooltip: str, icon_text: str) -> QPushButton:
-        btn = QPushButton(icon_text)
-        btn.setToolTip(tooltip)
-        btn.setFixedSize(32, 32)
-        btn.setCursor(Qt.PointingHandCursor)
-        btn.setStyleSheet(f"""
+        settings_btn = QPushButton("\u2699")
+        settings_btn.setToolTip("Settings")
+        settings_btn.setFixedSize(32, 32)
+        settings_btn.setCursor(Qt.PointingHandCursor)
+        settings_btn.setStyleSheet(f"""
             QPushButton {{
                 background: transparent; color: {COLORS['text_secondary']};
                 border: 1px solid transparent; border-radius: 6px; font-size: 14px;
@@ -307,7 +216,10 @@ class KrakenWindow(QMainWindow):
                 color: {COLORS['hd_white']};
             }}
         """)
-        return btn
+        settings_btn.clicked.connect(self._open_settings)
+        lay.addWidget(settings_btn)
+
+        return bar
 
     def _update_icon(self):
         color = CREATURES.get(self._current_creature, {}).get("color", "#00F2C2")
@@ -329,81 +241,26 @@ class KrakenWindow(QMainWindow):
         color = meta.get("color", "#00F2C2")
 
         self._creature_name.setText(meta.get("name", creature_id))
-        self._creature_name.setStyleSheet(f"color: {color}; font-size: 16px; font-weight: bold; background: transparent; border: none;")
+        self._creature_name.setStyleSheet(
+            f"color: {color}; font-size: 16px; font-weight: bold; "
+            f"background: transparent; border: none;"
+        )
         self._creature_subtitle.setText(meta.get("subtitle", ""))
         self._chat.set_creature_color(color)
-        self._selector.set_active(creature_id)
         self._update_icon()
 
         if not init:
-            self._chat.status_message(f"Switched to {meta.get('name', creature_id)} — {meta.get('description', '')[:60]}")
+            self._chat.status_message(
+                f"Switched to {meta.get('name', creature_id)} \u2014 "
+                f"{meta.get('description', '')[:80]}"
+            )
 
         self.cfg.set("creature", creature_id)
         self._update_status()
 
-    def _new_conversation(self):
-        # Save current conversation if it has messages
-        if self._chat_history:
-            self._conversations.append({
-                "name": self._chat_history[0]["content"][:40] if self._chat_history else "New Chat",
-                "creature": self._current_creature,
-                "messages": list(self._chat_history),
-                "ts": time.time(),
-            })
-            self._refresh_history()
-
-        self._chat_history = []
-        self._chat.clear()
-        meta = CREATURES.get(self._current_creature, {})
-        self._chat.status_message(f"New conversation with {meta.get('name', self._current_creature)}")
-
-    def _refresh_history(self):
-        # Clear existing items
-        while self._history_lay.count() > 1:
-            item = self._history_lay.takeAt(0)
-            w = item.widget()
-            if w:
-                w.deleteLater()
-
-        # Add history items (newest first)
-        for i, conv in enumerate(reversed(self._conversations)):
-            name = conv.get("name", "Chat")[:30]
-            creature = conv.get("creature", "kraken")
-            color = CREATURES.get(creature, {}).get("color", "#00F2C2")
-            btn = QPushButton(f"  {name}")
-            btn.setCursor(Qt.PointingHandCursor)
-            btn.setFixedHeight(28)
-            btn.setStyleSheet(f"""
-                QPushButton {{
-                    background: transparent; color: {COLORS['text_secondary']};
-                    border: none; border-radius: 4px; text-align: left;
-                    font-size: 10px; padding: 0 8px;
-                }}
-                QPushButton:hover {{ background: {glass_bg(80)}; color: {COLORS['hd_white']}; }}
-            """)
-            idx = len(self._conversations) - 1 - i
-            btn.clicked.connect(lambda _, ii=idx: self._load_conversation(ii))
-            self._history_lay.insertWidget(self._history_lay.count() - 1, btn)
-
-    def _load_conversation(self, index: int):
-        if 0 <= index < len(self._conversations):
-            conv = self._conversations[index]
-            self._chat_history = list(conv.get("messages", []))
-            creature = conv.get("creature", self._current_creature)
-            if creature != self._current_creature:
-                self._select_creature(creature)
-            self._chat.clear()
-            for msg in self._chat_history:
-                if msg["role"] == "user":
-                    self._chat.user_message(msg["content"])
-                elif msg["role"] == "assistant":
-                    self._chat.assistant_begin()
-                    self._chat.assistant_delta(msg["content"])
-                    self._chat.assistant_end()
-
     def _on_submit(self, text: str):
         if self.worker.running:
-            self._chat.error_message("Engine busy — stop the current run first.")
+            self._chat.error_message("Engine busy \u2014 stop the current run first.")
             return
 
         self._chat.user_message(text)
@@ -411,6 +268,30 @@ class KrakenWindow(QMainWindow):
         self.memory.remember("user", text, creature=self._current_creature)
 
         self.worker.run(self._current_creature, list(self._chat_history))
+
+    def _bind_shortcuts(self):
+        QShortcut(QKeySequence("Ctrl+L"), self, self._chat.clear)
+        QShortcut(QKeySequence("Escape"), self, self.worker.stop)
+        QShortcut(QKeySequence("Ctrl+N"), self, self._new_conversation)
+        QShortcut(QKeySequence("Ctrl+E"), self, self._export_chat)
+        QShortcut(QKeySequence("Ctrl+,"), self, self._open_settings)
+        QShortcut(QKeySequence("Ctrl+1"), self, lambda: self._select_creature("kraken"))
+        QShortcut(QKeySequence("Ctrl+2"), self, lambda: self._select_creature("leviathan"))
+        QShortcut(QKeySequence("Ctrl+3"), self, lambda: self._select_creature("charybdis"))
+        QShortcut(QKeySequence("Ctrl+4"), self, lambda: self._select_creature("megalodon"))
+
+    def _new_conversation(self):
+        if self._chat_history:
+            self._conversations.append({
+                "name": self._chat_history[0]["content"][:40] if self._chat_history else "New Chat",
+                "creature": self._current_creature,
+                "messages": list(self._chat_history),
+                "ts": time.time(),
+            })
+        self._chat_history = []
+        self._chat.clear()
+        meta = CREATURES.get(self._current_creature, {})
+        self._chat.status_message(f"New conversation with {meta.get('name', self._current_creature)}")
 
     def _export_chat(self):
         if not self._chat_history:
@@ -435,7 +316,7 @@ class KrakenWindow(QMainWindow):
                 }, f, indent=2)
         else:
             with open(path, "w", encoding="utf-8") as f:
-                f.write(f"# Kraken AI — {meta.get('name', self._current_creature)} Chat\n\n")
+                f.write(f"# Kraken AI \u2014 {meta.get('name', self._current_creature)} Chat\n\n")
                 f.write(f"Exported: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n---\n\n")
                 for msg in self._chat_history:
                     role = "You" if msg["role"] == "user" else meta.get("name", "Kraken")
@@ -445,8 +326,8 @@ class KrakenWindow(QMainWindow):
 
     def _open_settings(self):
         dialog = QDialog(self)
-        dialog.setWindowTitle("Kraken Settings")
-        dialog.resize(480, 500)
+        dialog.setWindowTitle("Settings")
+        dialog.resize(440, 400)
         dialog.setStyleSheet(f"""
             QDialog {{ background: {COLORS['deep_navy']}; color: {COLORS['hd_white']};
                        border: 1px solid {glass_edge()}; border-radius: 12px; }}
@@ -456,9 +337,11 @@ class KrakenWindow(QMainWindow):
         lay.setContentsMargins(20, 20, 20, 20)
         lay.setSpacing(12)
 
-        # Title
         title = QLabel("Settings")
-        title.setStyleSheet(f"color: {COLORS['seafoam']}; font-size: 18px; font-weight: bold; background: transparent; border: none;")
+        title.setStyleSheet(
+            f"color: {COLORS['seafoam']}; font-size: 18px; font-weight: bold; "
+            f"background: transparent; border: none;"
+        )
         lay.addWidget(title)
 
         # Temperature
@@ -468,8 +351,10 @@ class KrakenWindow(QMainWindow):
         temp_slider = QSlider(Qt.Horizontal)
         temp_slider.setRange(0, 100)
         temp_slider.setValue(int(self.cfg.get("temperature", 0.7) * 100))
-        temp_slider.setStyleSheet(f"QSlider::groove:horizontal {{ background: {COLORS['border']}; height: 4px; border-radius: 2px; }} "
-                                  f"QSlider::handle:horizontal {{ background: {COLORS['seafoam']}; width: 14px; margin: -5px 0; border-radius: 7px; }}")
+        temp_slider.setStyleSheet(
+            f"QSlider::groove:horizontal {{ background: {COLORS['border']}; height: 4px; border-radius: 2px; }} "
+            f"QSlider::handle:horizontal {{ background: {COLORS['seafoam']}; width: 14px; margin: -5px 0; border-radius: 7px; }}"
+        )
         def _on_temp(val):
             v = val / 100.0
             self.cfg.set("temperature", v)
@@ -492,28 +377,13 @@ class KrakenWindow(QMainWindow):
         tokens_slider.valueChanged.connect(_on_tokens)
         lay.addWidget(tokens_slider)
 
-        # Workspace
-        ws_label = QLabel(f"Workspace: {self.cfg.get('workspace', os.getcwd())}")
-        ws_label.setStyleSheet(f"color: {COLORS['text_secondary']}; font-size: 10px; background: transparent; border: none;")
-        ws_label.setWordWrap(True)
-        lay.addWidget(ws_label)
-        ws_btn = QPushButton("Change Workspace")
-        ws_btn.setCursor(Qt.PointingHandCursor)
-        ws_btn.setStyleSheet(f"QPushButton {{ background: {glass_bg(140)}; color: {COLORS['seafoam']}; border: 1px solid {glass_edge(60)}; border-radius: 6px; padding: 6px 12px; font-size: 11px; }} "
-                             f"QPushButton:hover {{ background: {glass_bg(180)}; }}")
-        def _change_ws():
-            d = QFileDialog.getExistingDirectory(self, "Workspace", self.cfg.get("workspace", os.getcwd()))
-            if d:
-                self.cfg.set("workspace", d)
-                ws_label.setText(f"Workspace: {d}")
-        ws_btn.clicked.connect(_change_ws)
-        lay.addWidget(ws_btn)
-
         # Memory toggle
         mem_btn = QPushButton(f"Memory: {'ON' if self.cfg.get('memory_enabled', True) else 'OFF'}")
         mem_btn.setCursor(Qt.PointingHandCursor)
-        mem_btn.setStyleSheet(f"QPushButton {{ background: {glass_bg(140)}; color: {COLORS['seafoam']}; border: 1px solid {glass_edge(60)}; border-radius: 6px; padding: 6px 12px; font-size: 11px; }} "
-                              f"QPushButton:hover {{ background: {glass_bg(180)}; }}")
+        mem_btn.setStyleSheet(
+            f"QPushButton {{ background: {glass_bg(140)}; color: {COLORS['seafoam']}; border: 1px solid {glass_edge(60)}; border-radius: 6px; padding: 6px 12px; font-size: 11px; }} "
+            f"QPushButton:hover {{ background: {glass_bg(180)}; }}"
+        )
         def _toggle_mem():
             current = self.cfg.get("memory_enabled", True)
             self.cfg.set("memory_enabled", not current)
@@ -524,8 +394,10 @@ class KrakenWindow(QMainWindow):
         # Clear memory
         clear_mem_btn = QPushButton("Clear Memory")
         clear_mem_btn.setCursor(Qt.PointingHandCursor)
-        clear_mem_btn.setStyleSheet(f"QPushButton {{ background: {COLORS['coral']}22; color: {COLORS['coral']}; border: 1px solid {COLORS['coral']}44; border-radius: 6px; padding: 6px 12px; font-size: 11px; }} "
-                                    f"QPushButton:hover {{ background: {COLORS['coral']}44; }}")
+        clear_mem_btn.setStyleSheet(
+            f"QPushButton {{ background: {COLORS['coral']}22; color: {COLORS['coral']}; border: 1px solid {COLORS['coral']}44; border-radius: 6px; padding: 6px 12px; font-size: 11px; }} "
+            f"QPushButton:hover {{ background: {COLORS['coral']}44; }}"
+        )
         def _clear_mem():
             self.memory.clear()
             self._chat.status_message("Memory cleared.")
@@ -534,38 +406,26 @@ class KrakenWindow(QMainWindow):
 
         lay.addStretch(1)
 
-        # Close
         close_btn = QPushButton("Close")
         close_btn.setCursor(Qt.PointingHandCursor)
-        close_btn.setStyleSheet(f"QPushButton {{ background: {COLORS['seafoam']}; color: {COLORS['deep_navy']}; border: none; border-radius: 6px; padding: 8px; font-size: 12px; font-weight: bold; }} "
-                                f"QPushButton:hover {{ background: {COLORS['seafoam']}cc; }}")
+        close_btn.setStyleSheet(
+            f"QPushButton {{ background: {COLORS['seafoam']}; color: {COLORS['deep_navy']}; border: none; border-radius: 6px; padding: 8px; font-size: 12px; font-weight: bold; }} "
+            f"QPushButton:hover {{ background: {COLORS['seafoam']}cc; }}"
+        )
         close_btn.clicked.connect(dialog.close)
         lay.addWidget(close_btn)
 
         dialog.exec()
 
-    def _bind_shortcuts(self):
-        QShortcut(QKeySequence("Ctrl+L"), self, self._chat.clear)
-        QShortcut(QKeySequence("Escape"), self, self.worker.stop)
-        QShortcut(QKeySequence("Ctrl+N"), self, self._new_conversation)
-        QShortcut(QKeySequence("Ctrl+E"), self, self._export_chat)
-        QShortcut(QKeySequence("Ctrl+,"), self, self._open_settings)
-        QShortcut(QKeySequence("Ctrl+1"), self, lambda: self._select_creature("kraken"))
-        QShortcut(QKeySequence("Ctrl+2"), self, lambda: self._select_creature("leviathan"))
-        QShortcut(QKeySequence("Ctrl+3"), self, lambda: self._select_creature("charybdis"))
-        QShortcut(QKeySequence("Ctrl+4"), self, lambda: self._select_creature("megalodon"))
-
     def _update_status(self):
         meta = CREATURES.get(self._current_creature, {})
         status = (
-            f"{meta.get('name', '?')} · "
-            f"{self.cfg.get('provider', 'kraken-native')} · "
-            f"temp {self.cfg.get('temperature', 0.7):.1f} · "
+            f"{meta.get('name', '?')} \u00b7 "
+            f"{self.cfg.get('provider', 'kraken-native')} \u00b7 "
+            f"temp {self.cfg.get('temperature', 0.7):.1f} \u00b7 "
             f"{'ON' if self.cfg.get('memory_enabled') else 'OFF'} memory"
         )
         self.statusBar().showMessage(status)
-
-    # ── Event drain ──────────────────────────────────────────────
 
     def _drain_events(self):
         try:
