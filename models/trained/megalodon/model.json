@@ -1,8 +1,12 @@
 {
   "id": "megalodon",
-  "profile": "medium",
-  "params": 1214720,
-  "steps": 400,
-  "tokens": 40236,
-  "trained": "2026-08-18 17:37:23"
+  "profile": "full",
+  "params": 35931136,
+  "int8_bytes": 35931136,
+  "val_loss": 5.423485056559245,
+  "best_val_loss": 5.42571873664856,
+  "steps": 500,
+  "tokens": 687593,
+  "trained": "2026-08-19 07:59:51",
+  "wall_seconds": 6616
 }

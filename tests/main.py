@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-build me a pygame game which is flappy bird
+give me a custom test python script that opens and simple giu
 """
 
 import sys
@@ -10,7 +10,7 @@ import os
 def main():
     """Main entry point."""
     print("Script started")
-    # TODO: Implement logic for: build me a pygame game which is flappy bird
+    # TODO: Implement logic for: give me a custom test python script that opens and simple gi
     print("Done")
 
 

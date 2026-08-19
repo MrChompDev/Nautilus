@@ -1,7 +1,7 @@
 """
 Nautilus OS — control/button icon helper.
 
-Uniform access to the AI-generated control glyphs in assets/controls with a
+Uniform access to control glyphs in assets/controls with a
 QStyle standard-icon fallback so nothing crashes if an asset is missing.
 Shell and apps use `control_icon(...)`/`control_pixmap(...)` instead of
 hard-coded text glyphs or ad-hoc QStyle lookups.

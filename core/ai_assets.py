@@ -1,5 +1,5 @@
 """
-Nautilus OS — AI Asset Generator (local ComfyUI backend)
+Nautilus OS — Asset Generator (local ComfyUI backend)
 
 Generates the desktop wallpapers and app icons with a local FLUX.2-klein
 image model served by a ComfyUI server, cached to assets/ alongside the

@@ -24,53 +24,56 @@ _log.info("Theme system initialized")
 
 COLORS = {
     # -- Base Canvas --
-    "abyss_navy":      "#081626",   # Root backgrounds, viewports
-    "slate_navy":      "#0E2238",   # Sidebars, toolbars, inactive panels
-    "deep_navy":       "#050D14",   # Deepest backgrounds (terminals, editors)
-    "void_black":      "#02060A",   # Maximum darkness (overlays, focus mode)
+    "base_light":      "#E8DCC8",   # Sandy beige - main background color
+    "base_mid":        "#D4C8B0",   # Darker begie - sidebars, panels, cards
+    "base_dark":       "#C2B49A",   # Deep beige - pressed states, shadows
+
+    # -- Wood tones (borders, structures) --
+    "wood":        "#8B6F47",   # Rich warm wood - borders, dividers
+    "wood_light":  "#A68B5B",   # Lighter wood - hover borders
+    "wood_dark":   "#6B5535",   # Dark wood - depth, shadows
+    
 
     # -- Accents --
-    "seafoam":         "#00F2C2",   # Primary accent -- carets, focus, active borders
-    "seafoam_dim":     "#00C9A0",   # Muted accent for hover states
-    "seafoam_glow":    "#00F2C240", # Glow / selection overlay
-    "seafoam_deep":    "#004D40",   # Deep accent for pressed states
+    "coral":           "#FF6b6b",   # Bright coral - primary accent
+    "coral_dim":       "#CC6640",   # Muted accent for hover states
+    "coral_glow":      "#FF7F5040", # Glow / selection overlay
+    "coral_deep":      "#FF4500",   # Deep accent for pressed states
 
-    # -- Alert & Status --
-    "coral":           "#FF7F50",   # Errors, warnings, breakpoints
-    "coral_dim":       "#CC6640",   # Muted warning
-    "amber":           "#FFA502",   # Caution / medium alerts
-    "emerald":         "#00C853",   # Success states
+     # -- Alert & Status --
+    "amber":           "#E8A830",   # Caution / medium alerts
+    "emerald":         "#5BA85B",   # Success states
 
     # -- Text --
-    "hd_white":        "#EEF4F8",   # Primary text, mono fonts
-    "text_secondary":  "#8BA4B8",   # Secondary labels
-    "text_muted":      "#506070",   # Muted / disabled text
-    "text_bright":     "#FFFFFF",   # Peak brightness (headings, selection)
+    "hd_white":        "#FAFAF8",   # Crisp white — primary text
+    "text_secondary":  "#6B5535",   # Dark wood — secondary labels
+    "text_muted":      "#9A8A70",   # Muted beige — disabled text
+    "text_bright":     "#FFFFFF",   # Peak brightness (headings)
 
-    # -- Refined borders & surfaces --
-    "border":          "#173250",   # Slightly refined standard borders
-    "border_active":   "#00F2C2",   # Active / focused border
-    "border_dim":      "#0A1A2A",   # Subtle dividers
+    # -- Borders --
+    "border":          "#8B6F47",   # Warm wood borders
+    "border_active":   "#FF6B6B",   # Coral active/focus borders
+    "border_dim":      "#C2B49A",   # Subtle beige dividers
 
-    # -- Enhanced interactive surfaces --
-    "surface_hover":   "#15304A",   # Subtly refined hover state for panels
-    "surface_pressed": "#0C1520",   # Refined pressed state
-    "surface_selected":"#1E3A5F",   # Refined selected item bg
+    # -- Interactive surfaces --
+    "surface_hover":   "#DDD0BC",   # Hover state
+    "surface_pressed": "#C8BAA4",   # Pressed state
+    "surface_selected":"#D0BFA6",   # Selected item bg
 
-    # -- Terminal-Specific --
-    "terminal_bg":     "#030810",   # Terminal background
-    "terminal_fg":     "#00F2C2",   # Terminal foreground
-    "terminal_dim":    "#007A6640", # Terminal dim overlay
+    # -- Terminal --
+    "terminal_bg":     "#2C2218",   # Dark warm brown
+    "terminal_fg":     "#FF6B6B",   # Coral terminal text
+    "terminal_dim":    "#9A8A7040", # Dim overlay
 
     # -- Scrollbar --
-    "scrollbar_bg":    "#050D14",
-    "scrollbar_handle": "#1A3352",
-    "scrollbar_hover":  "#254565",
+    "scrollbar_bg":    "#C2B49A",
+    "scrollbar_handle": "#8B6F47",
+    "scrollbar_hover":  "#A68B5B",
 
     # -- Tabs --
-    "tab_active":      "#0E2238",
-    "tab_inactive":    "#050D14",
-    "tab_hover":       "#0A1628",
+    "tab_active":      "#E8DCC8",
+    "tab_inactive":    "#C2B49A",
+    "tab_hover":       "#D4C8B0",
 }
 
 
@@ -137,32 +140,32 @@ def hex_to_rgba(hex_str: str, alpha: int = 255) -> str:
 
 def glass_bg(alpha: int = 180) -> str:
     """Translucent panel background -- the wallpaper glows through."""
-    return hex_to_rgba(COLORS["slate_navy"], alpha)
+    return hex_to_rgba(COLORS["base_mid"], alpha)
 
 
 def glass_bg_dark(alpha: int = 140) -> str:
     """Darker translucent chip (metrics, date, buttons)."""
-    return hex_to_rgba(COLORS["deep_navy"], alpha)
+    return hex_to_rgba(COLORS["base_dark"], alpha)
 
 
 def glass_bg_heavy(alpha: int = 220) -> str:
     """Heavier glass for content areas needing more contrast."""
-    return hex_to_rgba(COLORS["slate_navy"], alpha)
+    return hex_to_rgba(COLORS["base_mid"], alpha)
 
 
 def glass_edge(alpha: int = 48) -> str:
-    """Subtle seafoam edge for glass panels."""
-    return hex_to_rgba(COLORS["seafoam"], alpha)
+    """Subtle coral edge for glass panels."""
+    return hex_to_rgba(COLORS["coral"], alpha)
 
 
 def glass_sheen() -> str:
     """Faint white sheen for the glass highlight line."""
-    return "rgba(238, 244, 248, 26)"
+    return "rgba(250, 250, 248, 26)"
 
 
 def glass_shadow() -> str:
     """Subtle dark outer glow for elevated glass surfaces."""
-    return hex_to_rgba(COLORS["void_black"], 80)
+    return hex_to_rgba(COLORS["wood_dark"], 80)
 
 
 def glass_card_style(radius: int = 18) -> str:
@@ -188,11 +191,11 @@ def glass_panel_style(radius: int = 18) -> str:
 def glass_button_style(variant: str = "secondary") -> str:
     """Glass button QSS block. Variants: primary, secondary, danger."""
     if variant == "primary":
-        bg = hex_to_rgba(COLORS["seafoam_deep"], 160)
-        border = hex_to_rgba(COLORS["seafoam"], 120)
-        text = COLORS["seafoam"]
-        hover_bg = hex_to_rgba(COLORS["seafoam_deep"], 210)
-        press_bg = hex_to_rgba(COLORS["seafoam_deep"], 240)
+        bg = hex_to_rgba(COLORS["coral_deep"], 160)
+        border = hex_to_rgba(COLORS["coral"], 120)
+        text = COLORS["coral"]
+        hover_bg = hex_to_rgba(COLORS["coral_deep"], 210)
+        press_bg = hex_to_rgba(COLORS["coral_deep"], 240)
     elif variant == "danger":
         bg = hex_to_rgba(COLORS["coral_dim"], 140)
         border = hex_to_rgba(COLORS["coral"], 100)
@@ -242,19 +245,19 @@ def create_nautilus_palette() -> QPalette:
     p = QPalette()
 
     # Window / Background
-    p.setColor(QPalette.Window,          qcolor(COLORS["abyss_navy"]))
+    p.setColor(QPalette.Window,          qcolor(COLORS["base_light"]))
     p.setColor(QPalette.WindowText,      qcolor(COLORS["hd_white"]))
-    p.setColor(QPalette.Base,            qcolor(COLORS["deep_navy"]))
-    p.setColor(QPalette.AlternateBase,   qcolor(COLORS["slate_navy"]))
+    p.setColor(QPalette.Base,            qcolor(COLORS["base_mid"]))
+    p.setColor(QPalette.AlternateBase,   qcolor(COLORS["base_dark"]))
     p.setColor(QPalette.Text,            qcolor(COLORS["hd_white"]))
 
     # Buttons
-    p.setColor(QPalette.Button,          qcolor(COLORS["slate_navy"]))
+    p.setColor(QPalette.Button,          qcolor(COLORS["base_mid"]))
     p.setColor(QPalette.ButtonText,      qcolor(COLORS["hd_white"]))
 
     # Highlights
-    p.setColor(QPalette.Highlight,       qcolor(COLORS["seafoam"]))
-    p.setColor(QPalette.HighlightedText, qcolor(COLORS["void_black"]))
+    p.setColor(QPalette.Highlight,       qcolor(COLORS["coral"]))
+    p.setColor(QPalette.HighlightedText, qcolor(COLORS["wood_dark"]))
 
     # Disabled
     p.setColor(QPalette.Disabled, QPalette.WindowText, qcolor(COLORS["text_muted"]))
@@ -262,12 +265,12 @@ def create_nautilus_palette() -> QPalette:
     p.setColor(QPalette.Disabled, QPalette.ButtonText,  qcolor(COLORS["text_muted"]))
 
     # Tooltips
-    p.setColor(QPalette.ToolTipBase,     qcolor(COLORS["slate_navy"]))
+    p.setColor(QPalette.ToolTipBase,     qcolor(COLORS["base_mid"]))
     p.setColor(QPalette.ToolTipText,     qcolor(COLORS["hd_white"]))
 
     # Links
-    p.setColor(QPalette.Link,            qcolor(COLORS["seafoam"]))
-    p.setColor(QPalette.LinkVisited,     qcolor(COLORS["seafoam_dim"]))
+    p.setColor(QPalette.Link,            qcolor(COLORS["coral"]))
+    p.setColor(QPalette.LinkVisited,     qcolor(COLORS["coral_dim"]))
 
     return p
 
@@ -304,7 +307,7 @@ def get_global_stylesheet() -> str:
 
     /* -- Main Window -- */
     QMainWindow {{
-        background-color: {c['abyss_navy']};
+        background-color: {c['base_light']};
         border: none;
     }}
 
@@ -345,8 +348,8 @@ def get_global_stylesheet() -> str:
     }}
 
     QMenuBar::item:pressed {{
-        background: {hex_to_rgba(c['seafoam_deep'], 180)};
-        color: {c['seafoam']};
+        background: {hex_to_rgba(c['coral_deep'], 180)};
+        color: {c['coral']};
     }}
 
     /* -- Menus -- */
@@ -366,8 +369,8 @@ def get_global_stylesheet() -> str:
     }}
 
     QMenu::item:selected {{
-        background: {hex_to_rgba(c['seafoam_deep'], 180)};
-        color: {c['seafoam']};
+        background: {hex_to_rgba(c['coral_deep'], 180)};
+        color: {c['coral']};
     }}
 
     QMenu::item:disabled {{
@@ -411,8 +414,8 @@ def get_global_stylesheet() -> str:
 
     QTabBar::tab:selected {{
         background: {glass_bg(180)};
-        color: {c['seafoam']};
-        border-bottom: 2px solid {c['seafoam']};
+        color: {c['coral']};
+        border-bottom: 2px solid {c['coral']};
         border-color: {glass_edge()};
     }}
 
@@ -448,13 +451,13 @@ def get_global_stylesheet() -> str:
     QPushButton:hover {{
         background: {glass_bg(190)};
         border-color: {glass_edge(100)};
-        color: {c['seafoam']};
+        color: {c['coral']};
     }}
 
     QPushButton:pressed {{
         background: {glass_bg_dark(200)};
         border-color: {glass_edge(120)};
-        color: {c['seafoam']};
+        color: {c['coral']};
     }}
 
     QPushButton:disabled {{
@@ -464,9 +467,9 @@ def get_global_stylesheet() -> str:
     }}
 
     QPushButton:checked {{
-        background: {hex_to_rgba(c['seafoam_deep'], 180)};
+        background: {hex_to_rgba(c['coral_deep'], 180)};
         border-color: {glass_edge(120)};
-        color: {c['seafoam']};
+        color: {c['coral']};
     }}
 
     /* -- Tool Buttons -- */
@@ -480,14 +483,14 @@ def get_global_stylesheet() -> str:
     }}
 
     QToolButton:hover {{
-        color: {c['seafoam']};
+        color: {c['coral']};
         background: {glass_bg(130)};
         border-color: {glass_edge(50)};
     }}
 
     QToolButton:pressed {{
-        color: {c['seafoam']};
-        background: {hex_to_rgba(c['seafoam_deep'], 160)};
+        color: {c['coral']};
+        background: {hex_to_rgba(c['coral_deep'], 160)};
     }}
 
     /* -- Line Edit / Text Input -- */
@@ -497,7 +500,7 @@ def get_global_stylesheet() -> str:
         border: 1px solid {glass_edge(60)};
         border-radius: {RADIUS_SM};
         padding: 5px 12px;
-        selection-background-color: {c['seafoam_glow']};
+        selection-background-color: {c['coral_glow']};
         selection-color: {c['hd_white']};
         font-family: "{f['mono']}";
         font-size: {f['size_sm']}px;
@@ -505,7 +508,7 @@ def get_global_stylesheet() -> str:
     }}
 
     QLineEdit:focus {{
-        border: 1px solid {c['seafoam']};
+        border: 1px solid {c['coral']};
         background: {glass_bg_dark(150)};
     }}
 
@@ -527,12 +530,12 @@ def get_global_stylesheet() -> str:
         font-family: "{f['mono']}", "{f['mono_fallback']}";
         font-size: {f['size_sm']}px;
         padding: 8px;
-        selection-background-color: {c['seafoam_glow']};
+        selection-background-color: {c['coral_glow']};
         selection-color: {c['text_bright']};
     }}
 
     QTextEdit:focus, QPlainTextEdit:focus {{
-        border: 1px solid {c['seafoam']};
+        border: 1px solid {c['coral']};
     }}
 
     /* -- Tree View -- */
@@ -560,7 +563,7 @@ def get_global_stylesheet() -> str:
 
     QTreeView::item:selected {{
         background: {hex_to_rgba(c['surface_selected'], 180)};
-        color: {c['seafoam']};
+        color: {c['coral']};
     }}
 
     QTreeView::branch {{
@@ -601,7 +604,7 @@ def get_global_stylesheet() -> str:
 
     QListView::item:selected {{
         background: {hex_to_rgba(c['surface_selected'], 180)};
-        color: {c['seafoam']};
+        color: {c['coral']};
     }}
 
     /* -- Table View -- */
@@ -626,12 +629,12 @@ def get_global_stylesheet() -> str:
 
     QTableView::item:selected {{
         background: {hex_to_rgba(c['surface_selected'], 180)};
-        color: {c['seafoam']};
+        color: {c['coral']};
     }}
 
     QHeaderView::section {{
         background: {glass_bg_dark(180)};
-        color: {c['seafoam']};
+        color: {c['coral']};
         padding: 5px 10px;
         border: none;
         border-right: 1px solid {c['border_dim']};
@@ -663,7 +666,7 @@ def get_global_stylesheet() -> str:
     }}
 
     QScrollBar::handle:vertical:pressed {{
-        background: {hex_to_rgba(c['seafoam_dim'], 200)};
+        background: {hex_to_rgba(c['coral_dim'], 200)};
         border: 2px solid transparent;
     }}
 
@@ -696,7 +699,7 @@ def get_global_stylesheet() -> str:
     }}
 
     QScrollBar::handle:horizontal:pressed {{
-        background: {hex_to_rgba(c['seafoam_dim'], 200)};
+        background: {hex_to_rgba(c['coral_dim'], 200)};
         border: 2px solid transparent;
     }}
 
@@ -725,7 +728,7 @@ def get_global_stylesheet() -> str:
     }}
 
     QSplitter::handle:hover {{
-        background: {c['seafoam_dim']};
+        background: {c['coral_dim']};
     }}
 
     /* -- Status Bar -- */
@@ -763,14 +766,14 @@ def get_global_stylesheet() -> str:
         padding-bottom: 8px;
         font-family: "{f['ui']}";
         font-weight: bold;
-        color: {c['seafoam']};
+        color: {c['coral']};
     }}
 
     QGroupBox::title {{
         subcontrol-origin: margin;
         left: 12px;
         padding: 0 8px;
-        color: {c['seafoam']};
+        color: {c['coral']};
     }}
 
     /* -- Combo Box -- */
@@ -786,7 +789,7 @@ def get_global_stylesheet() -> str:
     }}
 
     QComboBox:focus {{
-        border: 1px solid {c['seafoam']};
+        border: 1px solid {c['coral']};
     }}
 
     QComboBox::drop-down {{
@@ -804,8 +807,8 @@ def get_global_stylesheet() -> str:
         color: {c['hd_white']};
         border: 1px solid {glass_edge()};
         border-radius: {RADIUS_MD};
-        selection-background-color: {hex_to_rgba(c['seafoam_deep'], 180)};
-        selection-color: {c['seafoam']};
+        selection-background-color: {hex_to_rgba(c['coral_deep'], 180)};
+        selection-color: {c['coral']};
     }}
 
     /* -- Spin Box -- */
@@ -820,7 +823,7 @@ def get_global_stylesheet() -> str:
     }}
 
     QSpinBox:focus, QDoubleSpinBox:focus {{
-        border: 1px solid {c['seafoam']};
+        border: 1px solid {c['coral']};
     }}
 
     /* -- Check Box / Radio -- */
@@ -839,8 +842,8 @@ def get_global_stylesheet() -> str:
     }}
 
     QCheckBox::indicator:checked {{
-        background: {hex_to_rgba(c['seafoam_deep'], 200)};
-        border-color: {c['seafoam']};
+        background: {hex_to_rgba(c['coral_deep'], 200)};
+        border-color: {c['coral']};
         border-radius: 4px;
     }}
 
@@ -849,8 +852,8 @@ def get_global_stylesheet() -> str:
     }}
 
     QRadioButton::indicator:checked {{
-        background: {hex_to_rgba(c['seafoam_deep'], 200)};
-        border-color: {c['seafoam']};
+        background: {hex_to_rgba(c['coral_deep'], 200)};
+        border-color: {c['coral']};
         border-radius: 9px;
     }}
 
@@ -868,7 +871,7 @@ def get_global_stylesheet() -> str:
 
     QProgressBar::chunk {{
         background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-            stop:0 {c['seafoam_deep']}, stop:1 {c['seafoam']});
+            stop:0 {c['coral_deep']}, stop:1 {c['coral']});
         border-radius: 3px;
     }}
 
@@ -905,21 +908,21 @@ def get_global_stylesheet() -> str:
     }}
 
     QSlider::handle:horizontal {{
-        background: {c['seafoam']};
+        background: {c['coral']};
         width: 16px;
         height: 16px;
         margin: -6px 0;
-        border: 2px solid {c['seafoam_dim']};
+        border: 2px solid {c['coral_dim']};
         border-radius: 8px;
     }}
 
     QSlider::handle:horizontal:hover {{
-        background: {c['seafoam_dim']};
-        border-color: {c['seafoam']};
+        background: {c['coral_dim']};
+        border-color: {c['coral']};
     }}
 
     QSlider::sub-page:horizontal {{
-        background: {hex_to_rgba(c['seafoam_deep'], 200)};
+        background: {hex_to_rgba(c['coral_deep'], 200)};
         border-radius: 3px;
     }}
 
