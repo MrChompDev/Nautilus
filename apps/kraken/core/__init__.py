@@ -1,1 +1,0 @@
-"""Kraken AI — core infrastructure."""
