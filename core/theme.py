@@ -47,16 +47,15 @@ COLORS = {
 #=========================================================================
 
 FONTS = {
-    "ui": "Segoe UI, Arial, sans-serif",
-    "mono": "Jetbrains Mono",
-    "size_xs": "10px",
-    "size_sm": "12px",
-    "size_md": "14px",
-    "size_lg": "16px",
-    "size_xl": "18px",
-    "size_xxl": "20px",
-    "size_title": "24px",
-
+    "ui": "Segoe UI",
+    "mono": "JetBrains Mono",
+    "size_xs": 10,
+    "size_sm": 12,
+    "size_md": 14,
+    "size_lg": 16,
+    "size_xl": 18,
+    "size_xxl": 20,
+    "size_title": 24,
 }
 
 #=========================================================================
