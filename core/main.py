@@ -5,7 +5,7 @@ import os
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QFrame, QHBoxLayout, QPushButton
+from PySide6.QtWidgets import QApplication, QMainWindow, QLabel, QFrame, QHBoxLayout, QPushButton, QWidget, QVBoxLayout
 from PySide6.QtCore import Qt, QTimer, QDateTime
 from core.theme import COLORS, FONTS, RADIUS_MD
 
@@ -73,7 +73,16 @@ class NautilusShell(QMainWindow):
                 background-color: {COLORS['bg_light']};
             }}
         """)
+        # Central Widget wit layout
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        layout = QVBoxLayout(central_widget)
+        layout.setContentsMargins(0,0,0,0)
+        layout.setSpacing(0)
 
+        # Top bar
+        layout.addWidget(TopBar())
+        
         # Center label
         label = QLabel("Nautilus OS")
         label.setAlignment(Qt.AlignCenter)
@@ -83,7 +92,7 @@ class NautilusShell(QMainWindow):
             font-size: {FONTS['size_title']}px;
             font-weight: bold;
         """)
-        self.setCentralWidget(label)
+        layout.addWidget(label)
 
 
 def main():
