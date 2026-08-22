@@ -195,6 +195,10 @@ Near-term engineering TODOs:
 - Standalone entry points per app (`python3 apps/<App>/main.py`).
 - Restore the test suite under `tests/`.
 
+The complete milestone-by-milestone plan is in
+[wiki/Roadmap.md](wiki/Roadmap.md), with a flat checkable task list in
+[`TODO.md`](TODO.md).
+
 Dependencies for the planned apps are already pinned in `requirements.txt`.
 
 ## Repository Structure

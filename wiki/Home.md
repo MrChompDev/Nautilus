@@ -29,7 +29,9 @@ system lives in a single *theme* module.
 - **[The Shell](Shell.md)** — `core/main.py`: TopBar, Dock, NautilusShell.
 - **[Design System](Design-System.md)** — theme tokens and styling conventions.
 - **[Surfline Browser](Surfline.md)** — the first app, built on Qt WebEngine.
-- **[Roadmap](Roadmap.md)** — planned apps and restart status.
+- **[Roadmap](Roadmap.md)** — full milestone plan: M0 shell foundation through
+  M6 release, every app with its feature set.
+- **[Master TODO](../TODO.md)** — flat checkable task list for all apps.
 - **[Kraken AI](Kraken-AI.md)** — packaging, CLI entry points, agent specs.
 - **[Testing & Linting](Testing-and-Linting.md)** — ruff config, test strategy.
 - **[Repository Layout](Repository-Layout.md)** — every folder explained.
