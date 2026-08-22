@@ -8,26 +8,26 @@ exists today vs. what is planned.
 
 | Component | State |
 | :--- | :--- |
-| Shell (`core/main.py`) |  Working: TopBar with clock, placeholder desktop, dock |
-| Design system (`core/theme.py`) |  Working: sand/wood/coral token set |
-| Surfline browser |  Working: nav, omnibox, home page; ⚠ tabs are a stub |
-| Dock buttons Abyssal / Kraken |  Placeholders (print only) |
+| Shell (`core/main.py`) | Working: TopBar with clock, placeholder desktop, dock |
+| Design system (`core/theme.py`) | Working: sand/wood/coral token set |
+| Surfline browser | Working: nav, omnibox, home page; tab switching is a stub |
+| Dock buttons Abyssal / Kraken | Placeholders (print only) |
 
 ## Planned apps (from the v1 design, to be rebuilt)
 
 | App | Purpose | Status |
 | :--- | :--- | :--- |
-| **Abyssal** | Code editor & IDE (multi-language, command palette, terminal) |  dock button exists |
-| **Kraken AI** | Local-first agentic engine + chat GUI ([details](Kraken-AI.md)) |  packaging/specs remain; engine code removed |
-| **Riptide** | Audio hub + SFX soundboard (requests + pygame) |  planned |
-| **Cinema** | Local media center for your own movies/shows |  planned |
-| **Logbook** | Markdown notes with live preview + search |  planned |
-| **Mariner** | Scientific calculator, history tape, nautical units |  planned |
-| **Current** | CPU/RAM/thermal telemetry + process kill (psutil) |  planned |
-| **Harbor** | Dual-pane keyboard-first file manager |  planned |
-| **Tide** | Tabbed terminal with a pure-Python internal shell |  planned |
-| **Anchor** | Settings/control center (display, network, audio, theme) |  planned |
-| **Reef** | Local-first messenger (offline thread + optional IMAP/SMTP) |  planned |
+| **Abyssal** | Code editor & IDE (multi-language, command palette, terminal) | Reserved — dock button exists |
+| **Kraken AI** | Local-first agentic engine + chat GUI ([details](Kraken-AI.md)) | Packaging/specs remain; engine code removed |
+| **Riptide** | Audio hub + SFX soundboard (requests + pygame) | Planned |
+| **Cinema** | Local media center for your own movies/shows | Planned |
+| **Logbook** | Markdown notes with live preview + search | Planned |
+| **Mariner** | Scientific calculator, history tape, nautical units | Planned |
+| **Current** | CPU/RAM/thermal telemetry + process kill (psutil) | Planned |
+| **Harbor** | Dual-pane keyboard-first file manager | Planned |
+| **Tide** | Tabbed terminal with a pure-Python internal shell | Planned |
+| **Anchor** | Settings/control center (display, network, audio, theme) | Planned |
+| **Reef** | Local-first messenger (offline thread + optional IMAP/SMTP) | Planned |
 
 ## Engineering TODOs visible in the code
 
