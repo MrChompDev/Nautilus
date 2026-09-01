@@ -1,12 +1,16 @@
 """Surfline Browser App for Nautilus OS"""
 
 from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QFrame
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QFrame, QDialog
 )
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from core.theme import COLORS, FONTS, RADIUS_MD, RADIUS_SM
-
+from apps.surfline.search import search, results_to_html
+from PySide6.QtWebEngineCore import QWebEngineProfile
+from apps.surfline.interceptor import AdBlocker
+from apps.surfline.vaultui import VaultWindow, SavePasswordDialog, ensure_account
+from apps.surfline.vault import find_entry, vault_exists
 
 class SurflineWindow(QMainWindow):
     def __init__(self):
@@ -107,6 +111,7 @@ class SurflineWindow(QMainWindow):
 
         # URL bar
         self.url_bar = QLineEdit()
+        self.showing_search = False
         self.url_bar.setPlaceholderText("Search or enter URL...")
         self.url_bar.setStyleSheet(f"""
             QLineEdit {{
@@ -131,8 +136,17 @@ class SurflineWindow(QMainWindow):
         home.clicked.connect(self.home_page)
         nav_layout.addWidget(home)
 
-        layout.addWidget(nav)
+        vault_btn = QPushButton("🔒")
+        vault_btn.setFixedSize(34, 28)
+        vault_btn.setStyleSheet(btn_style)
+        vault_btn.clicked.connect(self.open_vault)
+        nav_layout.addWidget(vault_btn)
 
+        layout.addWidget(nav)
+        # Ad & tracker blocker
+        profile = QWebEngineProfile.defaultProfile()
+        self.adblocker = AdBlocker()
+        profile.setUrlRequestInterceptor(self.adblocker)
         # ── Web view (create BEFORE home_page) ──
         self.web = QWebEngineView()
         self.web.urlChanged.connect(self.update_url)
@@ -150,10 +164,10 @@ class SurflineWindow(QMainWindow):
             <h1 style="color: {COLORS['text_dark']}; font-size: 36px; margin-bottom: 20px;">Surfline</h1>
             <p style="color: {COLORS['text_muted']}; margin-bottom: 30px;">Your gateway to the web</p>
             <input type="text" placeholder="Search or enter URL..."
-                   style="width: 500px; padding: 12px 16px; font-size: 14px;
-                          border: 2px solid {COLORS['border']}; border-radius: 8px;
-                          background: {COLORS['bg_light']}; color: {COLORS['text_dark']};
-                          outline: none;">
+                style="width: 500px; padding: 12px 16px; font-size: 14px;
+              border: 2px solid {COLORS['border']}; border-radius: 8px;
+              background: {COLORS['bg_light']}; color: {COLORS['text_dark']};
+              outline: none;"
             <div style="display: flex; gap: 20px; margin-top: 40px;">
                 <a href="https://www.google.com" style="color: {COLORS['coral']}; text-decoration: none; font-size: 14px;">Google</a>
                 <a href="https://www.youtube.com" style="color: {COLORS['coral']}; text-decoration: none; font-size: 14px;">YouTube</a>
@@ -164,18 +178,60 @@ class SurflineWindow(QMainWindow):
         </html>
         """
         self.web.setHtml(html)
+        self.showing_search = False
         self.url_bar.clear()
 
     def new_tab(self):
         self.home_page()
 
+    def open_vault(self):
+        passphrase = ensure_account(self)
+        if passphrase is None:
+            return
+        win = VaultWindow(passphrase)
+        win.show()
+
+    def save_password(self):
+        site = self.web.url().toString()
+        passphrase = ensure_account(self)
+        if passphrase is None:
+            return
+        dlg = SavePasswordDialog(site=site, parent=self)
+        if dlg.exec() == QDialog.Accepted:
+            s, u, p = dlg.values()
+            from apps.surfline.vault import add_entry
+            add_entry(passphrase, s, u, p)
+
+    def autofill(self):
+        passphrase = ensure_account(self)
+        if passphrase is None:
+            return
+        site = self.web.url().toString()
+        entry = find_entry(passphrase, site)
+        if entry is None:
+            return
+        self.web.page().runJavaScript(f"""
+            document.querySelector('input[type=password]').value = '{entry['password']}';
+        """)
+
     def navigate(self):
         text = self.url_bar.text().strip()
+        if not text:
+            return
+        # If it looks like a URL, go there directly
         if "." in text and not text.startswith("http"):
             text = "https://" + text
-        elif not text.startswith("http"):
-            text = "https://www.google.com/search?q=" + text
-        self.web.setUrl(QUrl(text))
+            self.web.setUrl(QUrl(text))
+        elif text.startswith("http"):
+            self.web.setUrl(QUrl(text))
+        else:
+            # It's a search query
+            results = search(text)
+            html = results_to_html(text, results, COLORS, FONTS)
+            self.web.setHtml(html)
+            self.showing_search = True
 
     def update_url(self, url):
-        self.url_bar.setText(url.toString())
+        if not self.showing_search and not url.toString().startswith("data:"):
+            self.url_bar.setText(url.toString())
+        self.setWindowTitle(f"Surfline — {self.adblocker.blocked_count} blocked")
