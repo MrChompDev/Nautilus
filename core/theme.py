@@ -6,40 +6,50 @@ This module contains the core theme configuration for the Nautilus OS design sys
 #=========================================================================
 
 COLORS = {
-    #backgrounds
-    "bg_light": "#E8DCC8",
-    "bg_mid":   "#D4C8B0",
-    "bg_dark":  "#C2B49A",
+    # Backgrounds (deep navy)
+    "bg_light":   "#0F1E2E",
+    "bg_mid":     "#152A3E",
+    "bg_dark":    "#0A1628",
 
-    # Wood tones
-    "wood": "#8B6F47",
-    "wood_light": "#A68B5B",
-    "wood_dark": "#6B5535",
+    # Teal accents
+    "teal":       "#0E7C94",
+    "teal_light": "#17A5BC",
+    "teal_dim":   "#0A5F72",
 
-    # Accent
-    "coral": "#FF6F61",
-    "coral_dim": "#FF8E80",
+    # Ice/sky accents
+    "ice":        "#90C8D8",
+    "ice_light":  "#B8E0EC",
+    "ice_dim":    "#6CAEBE",
+
+    # Coral (warm accent)
+    "coral":      "#FF6F61",
+    "coral_dim":  "#FF8E80",
     "coral_deep": "#E55B50",
 
-    # Text
-    "text": "#2C2C2C",
-    "text_dark": "#1A1A1A",
-    "text_muted": "#4D4D4D",
+    # Text (cool-tinted)
+    "text":       "#C8DAE4",
+    "text_dark":  "#E8F0F4",
+    "text_muted": "#6882A0",
 
     # Status
-    "success": "#4CAF50",
-    "warning": "#FFC107",
-    "error": "#F44336",
+    "success":    "#3DC98A",
+    "warning":    "#FFB74D",
+    "error":      "#FF5252",
 
     # Surfaces
-    "hover": "#F5F5F5",
-    "pressed": "#E0E0E0",
-    "selected": "#D1C4E9",
+    "hover":      "#1A3048",
+    "pressed":    "#0D1A2A",
+    "selected":   "#1A5068",
 
     # Borders
-    "border": "#BDBDBD",
-    "border_light": "#E0E0E0",
-    "border_dark": "#9E9E9E",
+    "border":       "#1E3A52",
+    "border_light": "#2A4A60",
+    "border_dark":  "#14283A",
+
+    # Legacy aliases (used by Surfline vault)
+    "wood":       "#0A5F72",
+    "wood_light": "#17A5BC",
+    "wood_dark":  "#0A1628",
 }
 
 #=========================================================================

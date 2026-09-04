@@ -58,30 +58,31 @@ def results_to_html(query: str, results: list[dict], colors: dict, fonts: dict) 
     for r in results:
         results_html += f"""
         <div style="margin-bottom: 26px; font-family: '{fonts['ui']}';">
-            <a href="{r['url']}" style="color: #1a0dab; text-decoration: none;
+            <a href="{r['url']}" style="color: {colors['teal']}; text-decoration: none;
                font-size: 20px; line-height: 1.3;">{r['title']}</a>
-            <div style="font-size: 13px; color: #006621; margin: 2px 0;">{r['url'][:60]}</div>
-            <div style="font-size: 14px; color: #4d5156; line-height: 1.58;">{r['snippet']}</div>
+            <div style="font-size: 13px; color: {colors['coral']}; margin: 2px 0;">{r['url'][:60]}</div>
+            <div style="font-size: 14px; color: {colors['text']}; line-height: 1.58;">{r['snippet']}</div>
         </div>
         """
 
     if not results:
         results_html = f"""
-        <div style="padding: 30px 0; color: #4d5156; font-size: 16px;">
+        <div style="padding: 30px 0; color: {colors['text_muted']}; font-size: 16px;">
             No results found for "{query}".
         </div>
         """
 
     return f"""
     <html>
-    <body style="background-color: #ffffff; margin: 0; min-height: 100vh;">
+    <body style="background-color: {colors['bg_light']}; margin: 0; min-height: 100vh;">
         <!-- Top nav bar like Google -->
-        <div style="background: #ffffff; padding: 14px 20px; border-bottom: 1px solid #ebebeb;
+        <div style="background: {colors['bg_mid']}; padding: 14px 20px; border-bottom: 1px solid {colors['border']};
                     display: flex; align-items: center; gap: 20px;">
             <span style="color: {colors['coral']}; font-size: 24px; font-weight: bold;
                          font-family: '{fonts['ui']}';">Surfline</span>
-            <div style="flex: 1; max-width: 620px; background: #f1f3f4; border-radius: 24px;
-                        padding: 10px 18px; color: #202124; font-family: '{fonts['ui']}';">{query}</div>
+            <div style="flex: 1; max-width: 620px; background: {colors['bg_dark']}; border-radius: 24px;
+                        padding: 10px 18px; color: {colors['text_dark']}; font-family: '{fonts['ui']}';
+                        border: 1px solid {colors['border']};">{query}</div>
         </div>
         <!-- Results below -->
         <div style="max-width: 650px; margin: 24px auto 0 120px; padding: 0 20px 60px;">

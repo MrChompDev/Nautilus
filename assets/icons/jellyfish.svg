@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="jf" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#17A5BC"/>
+      <stop offset="100%" stop-color="#0E7C94"/>
+    </linearGradient>
+  </defs>
+  <!-- Bell -->
+  <path d="M12 32 Q12 12 32 12 Q52 12 52 32 Q52 38 46 40 L44 38 Q44 32 42 30 Q38 28 36 30 Q34 32 32 30 Q30 28 26 30 Q24 32 22 30 Q20 28 18 30 Q16 32 16 38 L14 40 Q12 38 12 32Z" fill="url(#jf)" opacity="0.95"/>
+  <!-- Eyes -->
+  <circle cx="26" cy="26" r="2" fill="#E8F0F4"/>
+  <circle cx="38" cy="26" r="2" fill="#E8F0F4"/>
+  <circle cx="26.5" cy="26.5" r="0.8" fill="#0A1628"/>
+  <circle cx="38.5" cy="26.5" r="0.8" fill="#0A1628"/>
+  <!-- Tentacles -->
+  <path d="M20 40 Q18 48 20 56" stroke="#0E7C94" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M26 40 Q24 50 26 58" stroke="#17A5BC" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M32 40 Q30 48 32 56" stroke="#0E7C94" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <path d="M38 40 Q40 50 38 58" stroke="#17A5BC" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M44 40 Q46 48 44 56" stroke="#0E7C94" stroke-width="2" fill="none" stroke-linecap="round"/>
+</svg>

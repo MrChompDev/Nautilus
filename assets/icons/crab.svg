@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="cr" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FF6F61"/>
+      <stop offset="100%" stop-color="#E55B50"/>
+    </linearGradient>
+  </defs>
+  <!-- Shell (grid pattern for spreadsheet) -->
+  <ellipse cx="32" cy="32" rx="16" ry="12" fill="url(#cr)"/>
+  <!-- Grid lines on shell -->
+  <line x1="22" y1="26" x2="42" y2="26" stroke="#E55B50" stroke-width="0.8"/>
+  <line x1="22" y1="32" x2="42" y2="32" stroke="#E55B50" stroke-width="0.8"/>
+  <line x1="22" y1="38" x2="42" y2="38" stroke="#E55B50" stroke-width="0.8"/>
+  <line x1="28" y1="20" x2="28" y2="44" stroke="#E55B50" stroke-width="0.8"/>
+  <line x1="32" y1="20" x2="32" y2="44" stroke="#E55B50" stroke-width="0.8"/>
+  <line x1="36" y1="20" x2="36" y2="44" stroke="#E55B50" stroke-width="0.8"/>
+  <!-- Eyes on stalks -->
+  <line x1="26" y1="22" x2="22" y2="14" stroke="#FF8E80" stroke-width="2" stroke-linecap="round"/>
+  <line x1="38" y1="22" x2="42" y2="14" stroke="#FF8E80" stroke-width="2" stroke-linecap="round"/>
+  <circle cx="22" cy="13" r="2.5" fill="#E8F0F4"/>
+  <circle cx="42" cy="13" r="2.5" fill="#E8F0F4"/>
+  <circle cx="22.5" cy="13.5" r="1" fill="#0A1628"/>
+  <circle cx="42.5" cy="13.5" r="1" fill="#0A1628"/>
+  <!-- Left claw -->
+  <path d="M16 30 Q8 26 4 30 Q2 32 6 34 Q10 36 16 34" fill="#FF6F61" stroke="#E55B50" stroke-width="1"/>
+  <!-- Right claw -->
+  <path d="M48 30 Q56 26 60 30 Q62 32 58 34 Q54 36 48 34" fill="#FF6F61" stroke="#E55B50" stroke-width="1"/>
+  <!-- Legs -->
+  <path d="M18 38 L10 44 M20 40 L14 48 M22 42 L18 50" stroke="#FF8E80" stroke-width="1.5" stroke-linecap="round"/>
+  <path d="M46 38 L54 44 M44 40 L50 48 M42 42 L46 50" stroke="#FF8E80" stroke-width="1.5" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="mt" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#17A5BC"/>
+      <stop offset="100%" stop-color="#0A5F72"/>
+    </linearGradient>
+  </defs>
+  <!-- Wings (wide flat body) -->
+  <path d="M32 20 Q8 16 4 36 Q6 40 16 38 Q24 36 32 42 Q40 36 48 38 Q58 40 60 36 Q56 16 32 20Z" fill="url(#mt)"/>
+  <!-- Body center -->
+  <ellipse cx="32" cy="30" rx="6" ry="10" fill="#0E7C94"/>
+  <!-- Head -->
+  <ellipse cx="32" cy="20" rx="4" ry="3" fill="#17A5BC"/>
+  <!-- Eyes -->
+  <circle cx="29" cy="19" r="1.5" fill="#E8F0F4"/>
+  <circle cx="35" cy="19" r="1.5" fill="#E8F0F4"/>
+  <circle cx="29.3" cy="19.3" r="0.6" fill="#0A1628"/>
+  <circle cx="35.3" cy="19.3" r="0.6" fill="#0A1628"/>
+  <!-- Tail -->
+  <path d="M32 40 Q30 50 32 60" stroke="#0A5F72" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Gill slits -->
+  <path d="M28 26 L28 30 M30 25 L30 31 M34 25 L34 31 M36 26 L36 30" stroke="#0A1628" stroke-width="0.8" opacity="0.4"/>
+</svg>

@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <defs>
+    <linearGradient id="oc" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#17A5BC"/>
+      <stop offset="100%" stop-color="#0A5F72"/>
+    </linearGradient>
+  </defs>
+  <!-- Head -->
+  <ellipse cx="32" cy="24" rx="14" ry="12" fill="url(#oc)"/>
+  <!-- Eyes -->
+  <circle cx="26" cy="22" r="3" fill="#E8F0F4"/>
+  <circle cx="38" cy="22" r="3" fill="#E8F0F4"/>
+  <circle cx="27" cy="22" r="1.2" fill="#0A1628"/>
+  <circle cx="39" cy="22" r="1.2" fill="#0A1628"/>
+  <!-- Tentacle 1 (top left) -->
+  <path d="M18 34 Q10 40 6 52 Q4 58 8 60" stroke="#0E7C94" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Tentacle 2 (mid left) -->
+  <path d="M16 38 Q8 46 4 56" stroke="#17A5BC" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Tentacle 3 (bottom left) -->
+  <path d="M20 42 Q14 50 10 58" stroke="#0A5F72" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Tentacle 4 (top right) -->
+  <path d="M46 34 Q54 40 58 52 Q60 58 56 60" stroke="#0E7C94" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <!-- Tentacle 5 (mid right) -->
+  <path d="M48 38 Q56 46 60 56" stroke="#17A5BC" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  <!-- Tentacle 6 (bottom right) -->
+  <path d="M44 42 Q50 50 54 58" stroke="#0A5F72" stroke-width="2" fill="none" stroke-linecap="round"/>
+  <!-- Mouth -->
+  <path d="M28 30 Q32 33 36 30" stroke="#0A1628" stroke-width="1.5" fill="none"/>
+</svg>
