@@ -50,6 +50,21 @@ COLORS = {
     "wood":       "#0A5F72",
     "wood_light": "#17A5BC",
     "wood_dark":  "#0A1628",
+
+    # Gamification
+    "gold":        "#FFD700",
+    "gold_dim":    "#B8960F",
+    "xp_blue":     "#4FC3F7",
+
+    # Cybersec status
+    "scan_green":  "#00E676",
+    "alert_red":   "#FF1744",
+    "stealth":     "#7C4DFF",
+    "warning_alt": "#FF9100",
+
+    # Arcade
+    "arcade_pink": "#FF4081",
+    "arcade_cyan": "#00E5FF",
 }
 
 #=========================================================================

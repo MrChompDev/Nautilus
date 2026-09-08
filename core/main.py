@@ -1,20 +1,23 @@
 """Nautilus OS - Shell"""
 
-import sys
 import os
+import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from PySide6.QtWidgets import (
-    QApplication, QMainWindow, QLabel, QFrame, QHBoxLayout,
-    QPushButton, QWidget, QVBoxLayout
-)
-from PySide6.QtCore import Qt, QTimer, QDateTime
-from PySide6.QtGui import QPixmap, QPainter, QIcon
-from core.theme import COLORS, FONTS, RADIUS_MD, RADIUS_SM
+from PySide6.QtCore import QDateTime, Qt, QTimer
+from PySide6.QtGui import QColor, QPainter, QPixmap
+from PySide6.QtWidgets import QApplication, QFrame, QHBoxLayout, QLabel, QMainWindow, QScrollArea, QVBoxLayout, QWidget
+
+from core.launcher import APP_MANIFEST, DOCK_APPS, launch_app
+from core.profile import Profile
+from core.theme import COLORS, FONTS, RADIUS_MD
 
 ASSETS_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "assets")
 ICONS_DIR = os.path.join(ASSETS_DIR, "icons")
+
+_profile = Profile()
+_profile.check_daily_login()
 
 
 class TopBar(QFrame):
@@ -46,6 +49,46 @@ class TopBar(QFrame):
 
         layout.addStretch()
 
+        # Gamification display
+        self.level_label = QLabel()
+        self.level_label.setStyleSheet(f"""
+            color: {COLORS['gold']};
+            font-family: "{FONTS['mono']}";
+            font-size: {FONTS['size_sm']}px;
+            background: transparent;
+            border: none;
+        """)
+        layout.addWidget(self.level_label)
+
+        self.xp_bar = QLabel()
+        self.xp_bar.setFixedWidth(80)
+        self.xp_bar.setStyleSheet(f"""
+            color: {COLORS['xp_blue']};
+            font-family: "{FONTS['mono']}";
+            font-size: {FONTS['size_xs']}px;
+            background: transparent;
+            border: none;
+        """)
+        layout.addWidget(self.xp_bar)
+
+        spacer = QLabel("  ")
+        spacer.setStyleSheet("background: transparent; border: none;")
+        layout.addWidget(spacer)
+
+        self.coin_label = QLabel()
+        self.coin_label.setStyleSheet(f"""
+            color: {COLORS['gold']};
+            font-family: "{FONTS['mono']}";
+            font-size: {FONTS['size_sm']}px;
+            background: transparent;
+            border: none;
+        """)
+        layout.addWidget(self.coin_label)
+
+        spacer2 = QLabel("  ")
+        spacer2.setStyleSheet("background: transparent; border: none;")
+        layout.addWidget(spacer2)
+
         self.clock = QLabel("")
         self.clock.setStyleSheet(f"""
             color: {COLORS['ice']};
@@ -58,22 +101,29 @@ class TopBar(QFrame):
 
         timer = QTimer(self)
         timer.timeout.connect(self.update_clock)
+        timer.timeout.connect(self.update_gamification)
         timer.start(1000)
         self.update_clock()
+        self.update_gamification()
 
     def update_clock(self):
         now = QDateTime.currentDateTime()
         self.clock.setText(now.toString("hh:mm AP"))
 
+    def update_gamification(self):
+        global _profile
+        _profile = Profile()
+        self.level_label.setText(f"\u2693 Lv.{_profile.level}")
+        self.coin_label.setText(f"\U0001FA99 {_profile.coins}")
+        self.xp_bar.setText(f"{_profile.xp}xp")
+
 
 class AppButton(QFrame):
-    """Icon + label button for the dock."""
-
     def __init__(self, name, icon_file, on_launch):
         super().__init__()
         self.name = name
         self.on_launch = on_launch
-        self.setFixedSize(80, 72)
+        self.setFixedSize(72, 68)
         self.setStyleSheet("""
             QFrame {
                 background: transparent;
@@ -86,29 +136,27 @@ class AppButton(QFrame):
         self.setCursor(Qt.PointingHandCursor)
 
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(0, 4, 0, 4)
+        layout.setContentsMargins(0, 4, 0, 2)
         layout.setSpacing(2)
 
-        # Icon
         icon_label = QLabel()
         icon_path = os.path.join(ICONS_DIR, icon_file)
         if os.path.exists(icon_path):
-            pixmap = QPixmap(icon_path).scaled(40, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            pixmap = QPixmap(icon_path).scaled(36, 36, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             icon_label.setPixmap(pixmap)
         else:
             icon_label.setText("?")
-            icon_label.setStyleSheet(f"color: {COLORS['teal']}; font-size: 20px;")
+            icon_label.setStyleSheet(f"color: {COLORS['teal']}; font-size: 18px;")
         icon_label.setAlignment(Qt.AlignCenter)
         icon_label.setStyleSheet("background: transparent; border: none;")
         layout.addWidget(icon_label)
 
-        # Label
         label = QLabel(name)
         label.setAlignment(Qt.AlignCenter)
         label.setStyleSheet(f"""
             color: {COLORS['ice']};
             font-family: "{FONTS['mono']}";
-            font-size: 9px;
+            font-size: 8px;
             background: transparent;
             border: none;
         """)
@@ -122,7 +170,7 @@ class Dock(QFrame):
     def __init__(self, on_launch):
         super().__init__()
         self.on_launch = on_launch
-        self.setFixedHeight(90)
+        self.setFixedHeight(85)
         self.setStyleSheet(f"""
             QFrame {{
                 background-color: rgba(10, 22, 40, 180);
@@ -130,28 +178,41 @@ class Dock(QFrame):
                 border-radius: {RADIUS_MD};
             }}
         """)
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(12, 6, 12, 6)
-        layout.setSpacing(6)
 
-        apps = [
-            ("Surfline",   "jellyfish.svg"),
-            ("Abyssal",    "anglerfish.svg"),
-            ("Kraken",     "octopus.svg"),
-            ("Logbook",    "turtle.svg"),
-            ("Trench",     "narwhal.svg"),
-            ("Manta",      "manta.svg"),
-            ("Coral",      "crab.svg"),
-            ("Drift",      "seahorse.svg"),
-        ]
-        for app_name, icon_file in apps:
-            btn = AppButton(app_name, icon_file, on_launch)
-            layout.addWidget(btn)
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        scroll.setStyleSheet("""
+            QScrollArea {
+                background: transparent;
+                border: none;
+            }
+            QScrollArea > QWidget > QWidget {
+                background: transparent;
+            }
+        """)
+
+        inner = QWidget()
+        layout = QHBoxLayout(inner)
+        layout.setContentsMargins(8, 4, 8, 4)
+        layout.setSpacing(4)
+
+        for app_name in DOCK_APPS:
+            info = APP_MANIFEST.get(app_name)
+            if info:
+                btn = AppButton(app_name, info["icon"], on_launch)
+                layout.addWidget(btn)
+
+        layout.addStretch()
+        scroll.setWidget(inner)
+
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.addWidget(scroll)
 
 
 class WallpaperWidget(QWidget):
-    """Renders the wallpaper as a background."""
-
     def __init__(self, parent=None):
         super().__init__(parent)
         self._pixmap = QPixmap(os.path.join(ASSETS_DIR, "Wallpaper.png"))
@@ -175,28 +236,22 @@ class NautilusShell(QMainWindow):
         super().__init__()
         self.setWindowTitle("Nautilus OS")
         self.resize(1280, 720)
+        self._windows = {}
 
-        # Wallpaper background
         self.wallpaper = WallpaperWidget()
         self.setCentralWidget(self.wallpaper)
 
-        # Layout on top of wallpaper
         self.main_layout = QVBoxLayout(self.wallpaper)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setSpacing(0)
 
-        # Top bar
         self.main_layout.addWidget(TopBar())
-
-        # Content area (spacer)
         self.main_layout.addStretch()
 
-        # Dock
         dock = Dock(on_launch=self.launch_app)
-        dock.setFixedWidth(720)
+        dock.setFixedWidth(960)
         dock.setParent(self.wallpaper)
 
-        # Position dock at bottom center
         self._dock = dock
         self._position_dock()
 
@@ -212,38 +267,9 @@ class NautilusShell(QMainWindow):
             self._dock.show()
 
     def launch_app(self, app_name):
-        if app_name == "Surfline":
-            from apps.surfline.app import SurflineWindow
-            self._surfline = SurflineWindow()
-            self._surfline.show()
-        elif app_name == "Abyssal":
-            from apps.abyssal.app import AbyssalWindow
-            self._abyssal = AbyssalWindow()
-            self._abyssal.show()
-        elif app_name == "Kraken":
-            from apps.kraken.app import KrakenWindow
-            self._kraken = KrakenWindow()
-            self._kraken.show()
-        elif app_name == "Logbook":
-            from apps.logbook.app import LogbookWindow
-            self._logbook = LogbookWindow()
-            self._logbook.show()
-        elif app_name == "Trench":
-            from apps.trench.app import TrenchWindow
-            self._trench = TrenchWindow()
-            self._trench.show()
-        elif app_name == "Manta":
-            from apps.manta.app import MantaWindow
-            self._manta = MantaWindow()
-            self._manta.show()
-        elif app_name == "Coral":
-            from apps.coral.app import CoralWindow
-            self._coral = CoralWindow()
-            self._coral.show()
-        elif app_name == "Drift":
-            from apps.drift.app import DriftWindow
-            self._drift = DriftWindow()
-            self._drift.show()
+        window = launch_app(app_name, self)
+        if window is not None:
+            self._windows[app_name] = window
 
 
 def main():
