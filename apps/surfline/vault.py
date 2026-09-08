@@ -5,11 +5,10 @@ Uses PBKDF2-HMAC-SHA256 for key derivation and a CTR-mode stream
 cipher with HMAC-SHA256 as the PRF to build the keystream.
 """
 
-import os
-import json
-import hmac
 import hashlib
-import base64
+import hmac
+import json
+import os
 from pathlib import Path
 
 _ROOT = Path(__file__).resolve().parent.parent.parent

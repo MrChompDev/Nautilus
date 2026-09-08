@@ -1,8 +1,9 @@
 """Custom search engine — scrapes Bing HTML results"""
 
-import requests
 import base64
-from urllib.parse import quote, urlparse, parse_qs, unquote
+from urllib.parse import parse_qs, quote, unquote, urlparse
+
+import requests
 from bs4 import BeautifulSoup
 
 HEADERS = {

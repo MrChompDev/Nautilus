@@ -1,6 +1,7 @@
 """Request interceptor that blocks ads and trackers"""
 
 from PySide6.QtWebEngineCore import QWebEngineUrlRequestInterceptor
+
 from apps.surfline.blocklist import is_blocked
 
 

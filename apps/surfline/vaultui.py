@@ -1,16 +1,31 @@
 """Surfline password vault UI (PySide6)"""
 
-from PySide6.QtWidgets import (
-    QDialog, QWidget, QMainWindow, QVBoxLayout, QHBoxLayout,
-    QLabel, QLineEdit, QPushButton, QTableWidget, QTableWidgetItem,
-    QMessageBox, QHeaderView
-)
 from PySide6.QtCore import Qt
-from core.theme import COLORS, FONTS, RADIUS_SM
-from apps.surfline.vault import (
-    vault_exists, create_vault, verify_passphrase,
-    list_entries, add_entry, update_entry, delete_entry, find_entry,
+from PySide6.QtWidgets import (
+    QDialog,
+    QHBoxLayout,
+    QHeaderView,
+    QLabel,
+    QLineEdit,
+    QMainWindow,
+    QMessageBox,
+    QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
+    QVBoxLayout,
+    QWidget,
 )
+
+from apps.surfline.vault import (
+    add_entry,
+    create_vault,
+    delete_entry,
+    list_entries,
+    update_entry,
+    vault_exists,
+    verify_passphrase,
+)
+from core.theme import COLORS, FONTS, RADIUS_SM
 
 _INPUT_STYLE = f"""
 QLineEdit {{

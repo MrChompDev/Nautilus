@@ -1,16 +1,16 @@
 """Surfline Browser App for Nautilus OS"""
 
-from PySide6.QtWidgets import (
-    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLineEdit, QFrame, QDialog
-)
-from PySide6.QtCore import Qt, QUrl
-from PySide6.QtWebEngineWidgets import QWebEngineView
-from core.theme import COLORS, FONTS, RADIUS_MD, RADIUS_SM
-from apps.surfline.search import search, results_to_html
+from PySide6.QtCore import QUrl
 from PySide6.QtWebEngineCore import QWebEngineProfile
+from PySide6.QtWebEngineWidgets import QWebEngineView
+from PySide6.QtWidgets import QDialog, QFrame, QHBoxLayout, QLineEdit, QMainWindow, QPushButton, QVBoxLayout, QWidget
+
 from apps.surfline.interceptor import AdBlocker
-from apps.surfline.vaultui import VaultWindow, SavePasswordDialog, ensure_account
-from apps.surfline.vault import find_entry, vault_exists
+from apps.surfline.search import results_to_html, search
+from apps.surfline.vault import find_entry
+from apps.surfline.vaultui import SavePasswordDialog, VaultWindow, ensure_account
+from core.theme import COLORS, FONTS, RADIUS_SM
+
 
 class SurflineWindow(QMainWindow):
     def __init__(self):

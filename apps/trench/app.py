@@ -1,7 +1,8 @@
 """Trench — Document Editor"""
 
-from PySide6.QtWidgets import QMainWindow, QLabel, QWidget, QVBoxLayout
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QLabel, QMainWindow, QVBoxLayout, QWidget
+
 from core.theme import COLORS, FONTS
 
 
