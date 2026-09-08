@@ -221,7 +221,7 @@ class VaultWindow(QMainWindow):
         layout.setContentsMargins(16, 16, 16, 16)
         layout.setSpacing(12)
 
-        header = QLabel("<h2 style='color:%s;'>Password Vault</h2>" % COLORS['text_dark'])
+        header = QLabel(f"<h2 style='color:{COLORS['text_dark']};'>Password Vault</h2>")
         layout.addWidget(header)
 
         self.table = QTableWidget(0, 3)
