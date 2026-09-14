@@ -1,0 +1,1 @@
+{"vocab_size": 4096, "block_size": 512, "n_embd": 512, "n_layer": 8, "n_head": 8, "mlp_factor": 4, "dropout": 0.0}

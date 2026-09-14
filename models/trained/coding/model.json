@@ -1,0 +1,12 @@
+{
+  "id": "coding",
+  "profile": "full",
+  "params": 35931136,
+  "int8_bytes": 35931136,
+  "val_loss": 0.1430860437452793,
+  "best_val_loss": 0.14805387755235036,
+  "steps": 2000,
+  "tokens": 354328,
+  "trained": "2026-09-11 13:08:23",
+  "wall_seconds": 19355
+}

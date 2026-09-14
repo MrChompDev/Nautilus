@@ -171,16 +171,29 @@ def main():
 
         # Validation check + early stopping
         if step % val_check_interval == 0 and step > 0:
+            out_dir = os.path.join(args.out, args.id)
             val_loss = estimate_loss(model, ids, cfg["block_size"], args.batch, device)
+            best_dir = os.path.join(out_dir, "checkpoints", "best")
             print(f"  [val] step {step} val_loss {val_loss:.4f} (best {best_val_loss:.4f})", flush=True)
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 patience_counter = 0
+                model.export_int8(best_dir)
+                tok.save(os.path.join(best_dir, "bpe.json"))
             else:
                 patience_counter += 1
                 if patience_counter >= args.patience and step >= warmup_steps * 2:
                     print(f"  [early stop] patience exhausted at step {step}")
                     break
+
+            # Crash-safe autosave: periodic step snapshots.
+            ckpt = os.path.join(out_dir, "checkpoints", f"step_{step:05d}")
+            model.export_int8(ckpt)
+            tok.save(os.path.join(ckpt, "bpe.json"))
+            with open(os.path.join(ckpt, "model.json"), "w") as f:
+                json.dump({"id": args.id, "steps": step, "val_loss": round(val_loss, 4),
+                           "best_val_loss": round(best_val_loss, 4)}, f)
+            print(f"  [ckpt] saved {ckpt}", flush=True)
 
         if args.steps and step >= args.steps:
             break
