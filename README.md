@@ -1,275 +1,149 @@
 # Nautilus OS
 
-**A lightweight desktop environment built entirely in Python on PySide6**
-(Qt for Python) — designed with the Raspberry Pi 500 in mind and themed like a
-ship at sea. A glass-surfaced shell, a token-driven design system, and a suite
-of nautically named applications.
+A little desktop operating system I'm building with Python with PySide6.
+I'm mainly targeting the Rasberry Pi 500, and the whole look is based around the ocean: sand colours, wood tones that kind of stuff you know.
 
-> **Status — v2 rebuild in progress.** Nautilus was previously a much larger
-> system; it has been [restarted from scratch](wiki/Project-History.md) and is
-> being rebuilt from the core up. Today you get the **desktop shell**, the
-> **shared design system**, and the first app — the **Surfline web browser**.
-> The rest of the app suite is on the [roadmap](#roadmap).
+Quick heads up: this is currently in v2. I scarrped the first version and started from strach. right now we only really have SurfLine Browser working by its self and some what of the Kraken AI system. More Details in wiki/Project-History.md
 
----
+## What actually works right now
 
-## Table of Contents
+- Desktop shell in 'core/main.py'. Top bar with a clock and a nice clean wallaper, dock along the bottom to launch the apps.
+- Theme file in 'core/theme.py'. All colours and fonts live in the one place so I don't have to search multiple files.
+- Surfline Browser in 'apps/surfline/app.py'. Basic Qt Webengine browser with a address bar that handles URLS and search, back/forward/reload/home, a simple start page and a tab bar (tabs still need some tweaking)
 
-1. [Features](#features)
-2. [Requirements](#requirements)
-3. [Installation](#installation)
-4. [Running](#running)
-5. [Surfline Browser](#surfline-browser)
-6. [Design System](#design-system)
-7. [Roadmap](#roadmap)
-8. [Repository Structure](#repository-structure)
-9. [Development](#development)
-10. [Documentation](#documentation)
+A few things I tried to stick to:
 
----
+- Pure python + Qt, no C stuff or system services to mess with
+- No hardcoded colors in widgets, everything pulls from 'core.theme'
+- Everything has a nautical name. There's a glossary in wiki/Glossary.md if names get confusing.
 
-## Features
+## What you need
+- Python 3.11 or newer, 64-bit. I am developing on 3.13.
+- Works on Linux / Rasberry Pi OS (Hopefully haven't tested) / Windows
+- You want 1080p and OpenGL for the browser to behave. 2gb RAM runs, 8GB is a not nicer.
 
-What works today:
+Python packages are in 'requirements.txt'
 
-- **Desktop shell** (`core/main.py`) — a floating-glass top bar with live
-  clock, a placeholder desktop surface, and a bottom dock for launching apps.
-- **Design system** (`core/theme.py`) — one shared token set (colors, fonts,
-  radii) driving every stylesheet; restyle the whole OS by editing one file.
-- **Surfline browser** (`apps/surfline/app.py`) — Qt WebEngine browser with an
-  omnibox (URLs *and* search), back/forward/reload/home, a themed start page,
-  and a tab strip.
+- Pyside6 for all the UI'
+- psutil, cryptograpgy, requests, pyagme are in there for apps I'm planning (telemtry, password storage, audio) bust most of that isn't wired up yet.
 
-What makes it different:
+Rest is just stdlib.
 
-- **Pure Python + Qt.** No C toolchain, no system services — just `python3`.
-- **Token-driven theming.** Widgets never hardcode colors; everything reads
-  from `core.theme`.
-- **Warm "sand & coral" visual language** — translucent sand surfaces,
-  wood tones, coral accents.
-- **Nautical naming throughout** — every component is named like part of a
-  ship (see the [wiki glossary](wiki/Glossary.md)).
+## Getting it Running
 
-## Requirements
+1. Clone it:
 
-| Requirement | Minimum |
-| :--- | :--- |
-| Python | **3.11+ 64-bit** (PySide6 requires 64-bit; project targets 3.13) |
-| OS | Linux / Raspberry Pi OS / Windows |
-| Display | 1080p capable; OpenGL/GLES needed by Qt WebEngine |
-| RAM | 2 GB works, 8 GB recommended |
-
-Python dependencies (`requirements.txt`):
-
-| Package | Used by |
-| :--- | :--- |
-| `PySide6>=6.5.0` | UI framework — shell + every app |
-| `psutil>=5.9.0` | Current telemetry app *(planned)* |
-| `cryptography>=42.0` | Surfline password vault *(planned)* |
-| `requests>=2.31.0` | Riptide audio APIs *(planned)* |
-| `pygame>=2.5.0` | Riptide audio engine *(planned)* |
-
-Everything else is pure stdlib.
-
-## Installation
-
-### 1. Clone
-
-```sh
-git clone https://github.com/anomalyco/Nautilus.git
+git clone https://github.com/MrChompDev/Nautilus.git
 cd Nautilus
-```
 
-### 2. Install Python dependencies
 
-**Linux / Raspberry Pi OS** (venv recommended):
+2. Set up a venv and install:
 
-```sh
+Linux / Pi:
 python3 -m venv .venv
 source .venv/bin/activate
 python3 -m pip install -r requirements.txt
-```
 
-**Windows** (PySide6 needs 64-bit Python — target it explicitly):
-
-```sh
+Windows (make sure you're on 64-bit Python):
 py -3.13 -m pip install -r requirements.txt
-```
 
-### 3. System packages (Debian / Raspberry Pi OS only)
+3. On Debian / Pi OS you'll need some system libs for WebEngine and audio:
 
-Qt WebEngine and the audio stack need a few native libraries:
-
-```sh
 sudo apt update
-sudo apt install -y \
-  libnss3 libasound2 libxkbcommon0 libxkbcommon-x11-0 \
-  libgl1 libegl1 libdbus-1-3 fonts-noto-core
-```
+sudo apt install -y libnss3 libasound2 libxkbcommon0 libxkbcommon-x11-0 libgl1 libegl1 libdbus-1-3 fonts-noto-core
 
-### 4. Recommended font
+4. I use JetBrains Mono for the mono font, optional but looks better:
 
-The theme uses JetBrains Mono for monospace text:
-
-```sh
 sudo apt install -y fonts-jetbrains-mono
-```
 
-## Running
+Then run it from the repo root:
 
-From the repository root:
+python3 core/main.py
 
-```sh
-python3 core/main.py        # Linux / Raspberry Pi OS
-py -3.13 core/main.py       # Windows
-```
+On Windows it's `py -3.13 core/main.py`
 
-You'll see the Nautilus shell (1280×720):
+You'll get a 1280x720 window. Top bar says NAUTILUS with a live clock,
+middle is just a nice wallpaper, dock at the bottom has Surfline,
+Abyssal, and Kraken and other icons. Only Surfline and Kraken does anything at the moment, the others are placeholder
 
-- **Top bar** — translucent sand bar with the `NAUTILUS` wordmark and a live
-  clock (updates every second).
-- **Desktop** — warm sand backdrop with a centered title card.
-- **Dock** — floating bar at the bottom with three launch buttons:
-  **Surfline** (opens the browser), **Abyssal** and **Kraken**
-  (placeholders — coming soon).
+## Surfline
 
-## Surfline Browser
+It's just a QWebEngineView with some buttons around it. Type a domain
+and it adds https for you, type anything else and it throws it at Google.
+Back, forward, reload, home all work. Start page has links to Google,
+YouTube, GitHub, Wikipedia. Tab strip is there visually but switching
+tabs properly is still TODO.
 
-Surfline is the first application of the v2 rebuild — your gateway to the web.
+You can open it from the dock.
 
-| Feature | Detail |
-| :--- | :--- |
-| Engine | Qt WebEngine (`QWebEngineView`, bundled with PySide6) |
-| Omnibox | Type a domain → opens it over HTTPS; anything else → Google search |
-| Navigation | Back `<` · Forward `>` · Reload `↻` · Home `⌂` |
-| Start page | Themed HTML page with quick links (Google, YouTube, GitHub, Wikipedia) |
-| Tabs | Tab strip present; real multi-tab switching is on the roadmap |
+## Theming
 
-Launch it from the dock button, or run the shell and click **Surfline**.
+Everything visual is in `core/theme.py`. If you want to reskin the OS,
+that's the file to edit.
 
-## Design System
+Rough palette:
+Sand backgrounds around #E8DCC8 / #D4C8B0 / #C2B49A, wood browns
+around #8B6F47, coral accent #FF6F61, dark text #1A1A1A. Status colours
+are the usual green/yellow/red.
 
-All visual language lives in [`core/theme.py`](core/theme.py). Apps import
-tokens and build their stylesheets from them — no hardcoded colors anywhere.
+Fonts are Segoe UI for UI and JetBrains Mono for code-ish stuff.
+Corners are 8 / 12 / 16px. Shell bars use the same colours with some
+transparency for the glass look.
 
-| Token | Hex | Usage |
-| :--- | :--- | :--- |
-| Sand Light | `#E8DCC8` | Main window backdrops |
-| Sand Mid | `#D4C8B0` | Toolbars, nav bars, dock buttons |
-| Sand Dark | `#C2B49A` | Sidebars, tab strips |
-| Wood | `#8B6F47` / `#A68B5B` / `#6B5535` | Wood-tone accents (light/base/dark) |
-| Coral | `#FF6F61` | Primary accent — focus borders, links |
-| Ink | `#1A1A1A` / `#2C2C2C` / `#4D4D4D` | Text (strong/body/muted) |
-| Status | `#4CAF50` / `#FFC107` / `#F44336` | Success / warning / error |
+Full list is in wiki/Design-System.md.
 
-Fonts: **Segoe UI** (UI), **JetBrains Mono** (technical text). Radius tokens:
-`8px` / `12px` / `16px`. Shell surfaces render these at reduced alpha for the
-glass effect.
+## What's next
 
-Full reference: [wiki/Design-System.md](wiki/Design-System.md).
+Rebuilding the old apps one by one:
 
-## Roadmap
+- Shell - working
+- Surfline - working, tabs need fixing
+- Abyssal (code editor) - not started, button is there
+- Kraken AI - still packaging this bit
+- Riptide, Cinema, Logbook, Mariner, Current, Harbor, Tide, Anchor, Reef - all planned
 
-The v1 suite is being rebuilt app by app:
+Short term stuff I need to do:
+- Dock doesn't stay centered on resize, it's stuck at (440, 650)
+- Real tabs in Surfline, one view per tab
+- Let each app run on its own with `python3 apps/<name>/main.py`
+- Get tests back under `tests/`
 
-| App | Purpose | Status |
-| :--- | :--- | :--- |
-| **Shell** | Desktop environment | Working |
-| **Surfline** | Web browser | Working — tabs are a stub |
-| **Abyssal** | Code editor & IDE | Dock button reserved |
-| **Kraken AI** | Local-first agentic AI engine | Packaging + agent specs remain |
-| **Riptide** | Audio hub + SFX soundboard | Planned |
-| **Cinema** | Local media center | Planned |
-| **Logbook** | Markdown notes with live preview | Planned |
-| **Mariner** | Scientific calculator | Planned |
-| **Current** | CPU/RAM/thermal monitor | Planned |
-| **Harbor** | Dual-pane file manager | Planned |
-| **Tide** | Tabbed terminal | Planned |
-| **Anchor** | Settings & control center | Planned |
-| **Reef** | Local messenger | Planned |
+There's a full breakdown in wiki/Roadmap.md and a checklist in TODO.md.
 
-Near-term engineering TODOs:
+## Repo layout
 
-- Center/anchor the dock on window resize (currently fixed at `(440, 650)`).
-- Real tab management in Surfline (one `QWebEngineView` per tab).
-- Standalone entry points per app (`python3 apps/<App>/main.py`).
-- Restore the test suite under `tests/`.
-
-The complete milestone-by-milestone plan is in
-[wiki/Roadmap.md](wiki/Roadmap.md), with a flat checkable task list in
-[`TODO.md`](TODO.md).
-
-Dependencies for the planned apps are already pinned in `requirements.txt`.
-
-## Repository Structure
-
-```text
 Nautilus/
-├── AGENTS.md               # Instructions for AI coding agents
-├── README.md               # This file
-├── LICENSE                 # MIT
-├── requirements.txt        # All OS + app Python dependencies
-├── pyproject.toml          # Kraken AI packaging (`pip install .`)
-├── ruff.toml               # Lint configuration
-│
-├── core/
-│   ├── main.py             # Desktop shell entry point (TopBar, Dock, Shell)
-│   └── theme.py            # Design tokens: COLORS, FONTS, RADIUS_*
-│
-├── apps/
-│   └── surfline/
-│       └── app.py          # Surfline browser (Qt WebEngine)
-│
-├── agents/
-│   └── DatabaseArchitect.md  # Example Kraken agent spec
-│
-├── models/                 # AI training assets (~196 MB, standalone)
-│   ├── data/               # Corpora per persona/domain
-│   ├── lm/ · imggen/ · trained/
-│   └── ...
-│
-├── wiki/                   # Project documentation (start at Home.md)
-├── docs/                   # Architecture docs & PRDs (to be repopulated)
-├── tests/                  # Test suite (to be restored)
-├── data/ · logs/           # Runtime artifacts
-└── .venv/                  # Local virtualenv (git-ignored)
-```
+├── core/main.py - shell
+├── core/theme.py - colours/fonts
+├── apps/surfline/app.py - browser
+├── agents/ - example Kraken agent spec
+├── models/ - AI training stuff, big folder (~196MB)
+├── wiki/ - docs, start at Home.md
+├── docs/ - architecture docs, mostly empty for now
+├── tests/ - needs restoring
+├── data/ / logs/ - runtime files
 
-## Development
+## Dev notes
 
-Lint with [ruff](https://docs.astral.sh/ruff/) (config in `ruff.toml`,
-line length 120, target `py313`):
+Lint is ruff, line length 120:
 
-```sh
 python3 -m ruff check .
-```
 
-Headless/CI runs need dummy drivers for Qt:
+If you're running headless / CI you need:
 
-```sh
 export QT_QPA_PLATFORM=offscreen
 export QTWEBENGINE_DISABLE_SANDBOX=1
-```
 
-Conventions:
+General rules I try to follow: use tokens from core.theme, make sure
+entry points add repo root to sys.path so you can run from anywhere,
+and keep QSS scoped to widget classes with hover/pressed states.
 
-- Import tokens from `core.theme`; never hardcode colors/fonts/radii.
-- Every entry point injects the repo root into `sys.path` first, so modules
-  run from any working directory.
-- Scope QSS rules to widget classes; style normal/`:hover`/`:pressed` states.
+## Docs
 
-## Documentation
+More in `wiki/`:
 
-Extended documentation lives in [`wiki/`](wiki/Home.md):
+- Architecture, Shell, Surfline Browser, Design System, Roadmap,
+  Project History, Glossary - all in there.
 
-- [Architecture](wiki/Architecture.md) — how the system fits together
-- [The Shell](wiki/Shell.md) — `core/main.py` deep dive
-- [Surfline Browser](wiki/Surfline.md) — internals of the browser app
-- [Design System](wiki/Design-System.md) — full token reference
-- [Roadmap](wiki/Roadmap.md) — status of every component
-- [Project History](wiki/Project-History.md) — v1 → v2 restart timeline
-- [Glossary](wiki/Glossary.md) — the nautical naming scheme decoded
+MIT License, see LICENSE.
 
----
-
-*MIT License — see [`LICENSE`](LICENSE).*
