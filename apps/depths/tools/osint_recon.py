@@ -1,15 +1,14 @@
 """OSINT Recon - The Depths
 
-Real username footprint aggregation. Sources:
+Real username footprint aggregation, using only free, key-less public sources:
   - GitHub public API (profile email + commit emails)
   - Public profile existence checks (sherlock-style HTTP probes)
-  - EmailRep.io  (reputation correlation, EMAILREP_TOKEN)
-  - Hunter.io    (domain email discovery, HUNTER_API_KEY)
-  - IntelX       (breach/paste search, INTELX_API_KEY)
-  - Dehashed     (breach search, DEHASHED_EMAIL + DEHASHED_API_KEY)
 
-Every source degrades gracefully: missing keys are reported as "skipped",
-never silently faked. Unauthorized use of these lookups is on the operator.
+Paid/key-gated services (EmailRep, Hunter.io, IntelX, Dehashed) are
+deliberately not used, so this tool needs no account, subscription, or API key
+and cannot leak one. Every source degrades gracefully: a failed lookup is
+reported as such, never silently faked. Use it on handles you own or are
+authorised to investigate.
 """
 
 import os
@@ -36,15 +35,11 @@ from core.theme import COLORS, FONTS
 
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36"
 
-# Brief, opt-in public API list. Each is a (name, needs_key, env_var).
+# Free public sources, in run order. None require an account or an API key.
 SOURCES = [
-    ("GitHub profile",       False, None),
-    ("GitHub commits",       False, None),
-    ("Public profiles",      False, None),
-    ("EmailRep.io",          True,  "EMAILREP_TOKEN"),
-    ("Hunter.io",            True,  "HUNTER_API_KEY"),
-    ("IntelX",               True,  "INTELX_API_KEY"),
-    ("Dehashed",             True,  "DEHASHED_EMAIL + DEHASHED_API_KEY"),
+    "GitHub profile",
+    "GitHub commits",
+    "Public profiles",
 ]
 
 # Public sites checked for profile existence. Format: name, url template.
@@ -64,19 +59,6 @@ PROFILE_SITES = [
 EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+\.[\w.]+")
 
 
-def get_source_env(name):
-    """Return the env var to set for a source (or None if none needed)."""
-    for src, needs_key, env in SOURCES:
-        if src == name:
-            return env
-    return None
-
-
-def env_for(sources):
-    """Collect which env vars are available across source names."""
-    return {src: (os.environ.get(env, "") if env else "available") for src, _, env in SOURCES if src in sources}
-
-
 def parse_emails(text):
     if not text:
         return []
@@ -92,7 +74,7 @@ class ReconWorker(QThread):
     def __init__(self, username, use_sources=None):
         super().__init__()
         self.username = username.strip()
-        self.use_sources = use_sources or [s for s, _, _ in SOURCES]
+        self.use_sources = use_sources or list(SOURCES)
         self._running = True
         self._found = {}
         self._profiles = {}
@@ -182,129 +164,6 @@ class ReconWorker(QThread):
                 self._log(YELLOW, f"    [~] {name:<12} unreachable")
         self._log(YELLOW, "    [i] Profile existence only. No email is ever exposed by these sites.")
 
-    # ---------------------------------------------------------------- emailrep
-    def _emailrep(self):
-        """Score an email's reputation if we already found one."""
-        if "EmailRep.io" not in self.use_sources:
-            return
-        token = os.environ.get("EMAILREP_TOKEN", "")
-        if not token:
-            self._log(YELLOW, "[*] EmailRep.io skipped: set EMAILREP_TOKEN")
-            return
-        self._log(CYAN, "[*] EmailRep.io reputation checks...")
-        for email, sources in list(self._found.items()):
-            if not self._running:
-                return
-            if any("GitHub" in s for s in sources):
-                try:
-                    r = requests.get(f"https://emailrep.io/query/{email}", headers={"Key": token, "User-Agent": UA}, timeout=10)
-                except requests.RequestException:
-                    self._log(RED, f"    [!] EmailRep unreachable for {email}")
-                    continue
-                if r.status_code == 200:
-                    j = r.json()
-                    rep = j.get("reputation", "unknown")
-                    created = j.get("details", {}).get("profile_created_ago", "")
-                    self._log(GREEN, f"    [+] {email}: reputation={rep} created={created}")
-                elif r.status_code == 401:
-                    self._log(YELLOW, "    [-] EmailRep: bad token")
-                    return
-                else:
-                    self._log(YELLOW, f"    [-] EmailRep: HTTP {r.status_code} for {email}")
-
-    # ------------------------------------------------------------------ hunter
-    def _hunter(self):
-        """Discover more emails on a domain (needs a seed domain from found emails)."""
-        if "Hunter.io" not in self.use_sources:
-            return
-        key = os.environ.get("HUNTER_API_KEY", "")
-        domains = {e.rsplit("@", 1)[-1] for e in self._found}
-        if not key:
-            self._log(YELLOW, "[*] Hunter.io skipped: set HUNTER_API_KEY")
-            return
-        if not domains:
-            self._log(YELLOW, "[*] Hunter.io skipped: no domains to expand yet")
-            return
-        self._log(CYAN, f"[*] Hunter.io domain search for {', '.join(sorted(domains))}...")
-        for domain in sorted(domains):
-            try:
-                r = requests.get("https://api.hunter.io/v2/domain-search", params={"domain": domain, "api_key": key}, timeout=10)
-            except requests.RequestException:
-                self._log(RED, f"    [!] Hunter unreachable for {domain}")
-                continue
-            if r.status_code == 200:
-                data = r.json().get("data", {})
-                for emp in data.get("emails", []):
-                    self._record_email(emp["value"], "Hunter.io")
-                self._log(GREEN, f"    [+] {domain}: {len(data.get('emails', []))} email(s) on record")
-            elif r.status_code == 401:
-                self._log(YELLOW, "    [-] Hunter: bad key")
-                return
-            else:
-                self._log(YELLOW, f"    [-] Hunter: HTTP {r.status_code}")
-
-    # ------------------------------------------------------------------ intelx
-    def _intelx(self):
-        """IntelX search by username — returns pastes/breach snippets with emails."""
-        if "IntelX" not in self.use_sources:
-            return
-        key = os.environ.get("INTELX_API_KEY", "")
-        if not key:
-            self._log(YELLOW, "[*] IntelX skipped: set INTELX_API_KEY")
-            return
-        self._log(CYAN, f"[*] IntelX search for '{self.username}'...")
-        try:
-            r = requests.post(
-                "https://2.intelx.io/intelligent/search",
-                headers={"x-key": key, "Content-Type": "application/json"},
-                json={"term": self.username, "maxresults": 10, "sort": 2, "media": 0, "terminate": [0, 1, 2]},
-                timeout=15,
-            )
-        except requests.RequestException:
-            self._log(RED, "    [!] IntelX unreachable")
-            return
-        if r.status_code != 200:
-            self._log(YELLOW, f"    [-] IntelX: HTTP {r.status_code} (key/quota?)")
-            return
-        j = r.json()
-        hits = j.get("total", 0)
-        self._log(GREEN, f"    [+] IntelX: {hits} record(s)")
-        if hits:
-            self._log(YELLOW, "    [i] Full snippet extraction needs a later poll step; emails below are sample coverage.")
-
-    # ---------------------------------------------------------------- dehashed
-    def _dehashed(self):
-        """Dehashed breach search: username -> emails in leaked databases."""
-        if "Dehashed" not in self.use_sources:
-            return
-        email = os.environ.get("DEHASHED_EMAIL", "")
-        key = os.environ.get("DEHASHED_API_KEY", "")
-        if not (email and key):
-            self._log(YELLOW, "[*] Dehashed skipped: set DEHASHED_EMAIL and DEHASHED_API_KEY")
-            return
-        self._log(CYAN, f"[*] Dehashed breach search for '{self.username}'...")
-        try:
-            r = requests.get(
-                "https://api.dehashed.com/search",
-                params={"query": f"username:{self.username}", "size": 100},
-                auth=(email, key),
-                headers={"Accept": "application/json"},
-                timeout=20,
-            )
-        except requests.RequestException:
-            self._log(RED, "    [!] Dehashed unreachable")
-            return
-        if r.status_code != 200:
-            self._log(YELLOW, f"    [-] Dehashed: HTTP {r.status_code} (bad credentials/quota)")
-            return
-        j = r.json()
-        entries = j.get("entries", [])
-        emails = {e.get("email") for e in entries if e.get("email")}
-        self._log(GREEN, f"    [+] Dehashed: {len(emails)} unique email(s) across {len(entries)} breach row(s)")
-        for e in sorted(emails)[:50]:
-            self._record_email(e, "Dehashed")
-            self._log(GREEN, f"        {e}")
-
     # -------------------------------------------------------------------- run
     def run(self):
         self._github()
@@ -312,20 +171,13 @@ class ReconWorker(QThread):
             self.done.emit()
             return
         self._public_profiles()
-        if not self._running:
-            self.done.emit()
-            return
-        self._emailrep()
-        self._hunter()
-        self._intelx()
-        self._dehashed()
         self._summarize()
         self.done.emit()
 
     def _summarize(self):
         self._log(CYAN, "\n[*] Correlation summary")
         if not self._found:
-            self._log(YELLOW, "    No emails found. Add source keys or pick an existing handle.")
+            self._log(YELLOW, "    No emails found. Try a handle that has a public GitHub profile.")
             return
         for email, sources in sorted(self._found.items()):
             tags = ", ".join(sorted(set(sources)))
@@ -349,11 +201,11 @@ class OsintReconWindow(QMainWindow):
 
         layout.addWidget(make_header(
             "\U0001F4F1 OSINT Recon",
-            "Username footprint - GitHub, public profiles, breach index (real lookups)"
+            "Username footprint - GitHub API + public profile checks (no API key needed)"
         ))
         layout.addWidget(hline())
 
-        warn = QLabel("\u26A0 Authorized use only. These lookups target public and subscription data; run them on your own handles.")
+        warn = QLabel("\u26A0 Authorized use only. These lookups read public pages and public APIs; run them on your own handles.")
         warn.setWordWrap(True)
         warn.setStyleSheet(f"color: {COLORS['warning']}; font-size: {FONTS['size_sm']}px;")
         layout.addWidget(warn)
@@ -384,9 +236,8 @@ class OsintReconWindow(QMainWindow):
         layout.addWidget(self.output, 1)
 
         self._log(YELLOW, "[*] OSINT Recon ready. Sources:")
-        for name, needs_key, env in SOURCES:
-            status = "enabled" if (not needs_key or os.environ.get(env or "", "")) else f"needs {env}"
-            self._log(CYAN if "enabled" in status else YELLOW, f"    - {name:<16} {status}")
+        for name in SOURCES:
+            self._log(CYAN, f"    - {name:<16} enabled (free, no key)")
 
     def _log(self, color, msg):
         self.output.setTextColor(color if isinstance(color, str) and color.startswith("#") else color)
