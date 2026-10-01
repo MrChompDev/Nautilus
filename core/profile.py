@@ -6,7 +6,7 @@ Storage: ~/.nautilus/profile.json
 
 import json
 import math
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 PROFILE_DIR = Path.home() / ".nautilus"
@@ -116,7 +116,7 @@ class Profile:
         last = self._data.get("last_login", "")
         if last and last.startswith(today):
             return
-        yesterday = datetime.now().replace(day=datetime.now().day - 1).strftime("%Y-%m-%d")
+        yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
         if last and last.startswith(yesterday):
             self._data["daily_streak"] = self._data.get("daily_streak", 0) + 1
         else:

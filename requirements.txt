@@ -29,6 +29,7 @@ markdown>=3.6
 scapy>=2.5.0
 python-whois>=0.9.4
 dnspython>=2.6.0
+pillow>=10.0.0
 
 # Optional: for production builds
 # pyinstaller>=5.0

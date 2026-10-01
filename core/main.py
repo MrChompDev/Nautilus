@@ -215,7 +215,7 @@ class Dock(QFrame):
 class WallpaperWidget(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self._pixmap = QPixmap(os.path.join(ASSETS_DIR, "Wallpaper.png"))
+        self._pixmap = QPixmap(os.path.join(ASSETS_DIR, "Wallpaper.jpg"))
 
     def paintEvent(self, event):
         painter = QPainter(self)
