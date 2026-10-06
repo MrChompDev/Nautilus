@@ -140,14 +140,14 @@ and keep QSS scoped to widget classes with hover/pressed states.
 
 ## Future Apps
 
-Abyssal Code Editor
-Coral
-Depths
-Drift
-Kraken
-Logbook
-Manta
-Trench
+- Abyssal
+- Coral
+- Depths
+- Drift
+- Kraken
+- Logbook
+- Manta
+- Trench
 
 ## Docs
 
