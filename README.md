@@ -138,6 +138,17 @@ General rules I try to follow: use tokens from core.theme, make sure
 entry points add repo root to sys.path so you can run from anywhere,
 and keep QSS scoped to widget classes with hover/pressed states.
 
+## Future Apps
+
+Abyssal Code Editor
+Coral
+Depths
+Drift
+Kraken
+Logbook
+Manta
+Trench
+
 ## Docs
 
 More in `wiki/`:
