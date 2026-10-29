@@ -6,7 +6,6 @@ Run: python3 PROJECT_BRAIN.py  # quick overview
 
 import json
 import sys
-from pathlib import Path
 
 # ─── Core Architecture ───
 SHELL_ENTRY = "core/main.py:NautilusShell"
@@ -160,6 +159,7 @@ DESIGN_PATTERNS = [
 COMMANDS = {
     "lint": "ruff check .",
     "shell": "python3 core/main.py  # or: py -3.13 core/main.py (Windows)",
+    "release": "python3 scripts/build_release.py [--with-models]  # push a v* tag to publish",
     "tests": "python3 tests/smoke_test.py  # and python3 tests/test_kraken_*.py",
     "headless_ci": "export QT_QPA_PLATFORM=offscreen && export QTWEBENGINE_DISABLE_SANDBOX=1",
 }
@@ -242,7 +242,7 @@ if __name__ == "__main__":
     else:
         # Quick overview
         d = dump()
-        print(f"Nautilus OS — Project Brain")
+        print("Nautilus OS — Project Brain")
         print(f"  Shell: {d['shell']}")
         print(f"  Theme: {d['theme']}")
         print(f"  Launcher: {d['launcher']}")
@@ -253,4 +253,4 @@ if __name__ == "__main__":
         print(f"  Depths tools: {len(d['depths_tools'])}")
         print(f"  Design patterns: {len(d['design_patterns'])}")
         print(f"  Commands: {list(d['commands'].keys())}")
-        print(f"\nRun: python3 PROJECT_BRAIN.py dump  # full JSON snapshot")
+        print("\nRun: python3 PROJECT_BRAIN.py dump  # full JSON snapshot")
