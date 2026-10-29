@@ -2,11 +2,10 @@
 
 import os
 
-from PySide6.QtCore import QDir, QRect, QSize, Qt, QRegularExpression
+from PySide6.QtCore import QRect, QRegularExpression, QSize, Qt
 from PySide6.QtGui import (
     QColor,
     QFont,
-    QFileSystemModel,
     QKeySequence,
     QPainter,
     QShortcut,
@@ -17,6 +16,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QFileDialog,
+    QFileSystemModel,
     QLabel,
     QMainWindow,
     QMessageBox,
@@ -336,7 +336,7 @@ class AbyssalWindow(QMainWindow):
 
     def load_path(self, path):
         try:
-            with open(path, "r", encoding="utf-8", errors="replace") as handle:
+            with open(path, encoding="utf-8", errors="replace") as handle:
                 self.editor.setPlainText(handle.read())
         except OSError as exc:
             QMessageBox.critical(self, "Abyssal", f"Could not open file:\n{exc}")

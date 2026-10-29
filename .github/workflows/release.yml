@@ -1,0 +1,60 @@
+# Builds and publishes Nautilus OS to the Releases tab automatically.
+# Trigger: push a tag like v2.0.1  →  a release appears with the OS zip attached.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Build release zips
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          V="${TAG#v}"
+          python3 scripts/build_release.py --version "$V"
+          python3 scripts/build_release.py --version "$V" \
+            --with-models --out "dist/Nautilus-Kraken-Local-Models-$TAG.zip"
+          cd dist
+          sha256sum *.zip > sha256sums.txt
+
+      - name: Publish release
+        env:
+          TAG: ${{ github.ref_name }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cat > notes.md <<EOF
+          ## Try it
+
+          1. Download **Nautilus-OS-$TAG.zip** below and unzip it.
+          2. Linux / Raspberry Pi OS: \`sh run.sh\`    Windows: double-click \`run.bat\`
+          3. First run installs the Python packages automatically, then the shell starts.
+
+          Optional: download **Nautilus-Kraken-Local-Models-$TAG.zip** and unzip it into the
+          same \`Nautilus/\` folder to give Kraken its local trained AI models.
+
+          Needs Python 3.11+ 64-bit. Full manual install in the README.
+          EOF
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release already exists — uploading assets"
+            gh release upload "$TAG" dist/*.zip dist/sha256sums.txt --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$TAG" dist/*.zip dist/sha256sums.txt \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "Nautilus OS $TAG" \
+              --notes-file notes.md
+          fi

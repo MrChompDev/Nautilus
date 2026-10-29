@@ -3,7 +3,23 @@
 A little desktop operating system I'm building with Python with PySide6.
 I'm mainly targeting the Rasberry Pi 500, and the whole look is based around the ocean: sand colours, wood tones that kind of stuff you know.
 
-Quick heads up: this is currently in v2. I scarrped the first version and started from strach. right now we only really have SurfLine Browser working by its self and some what of the Kraken AI system. More Details in wiki/Project-History.md
+> **Note:** this is currently in v2. I scarrped the first version and started
+> from strach. right now we only really have SurfLine Browser working by its self and some what of the Kraken AI system. More Details in wiki/Project-History.md
+
+## Testing it — no cloning, no reading
+
+Go to the [Releases tab](https://github.com/MrChompDev/Nautilus/releases),
+grab the zip, unzip it, run it. That's it.
+
+1. Download **Nautilus-OS-vX.Y.Z.zip** from the Releases tab
+2. Unzip it (you get a `Nautilus/` folder)
+3. Linux / Raspberry Pi OS: `sh run.sh` • Windows: double-click `run.bat`
+
+The launcher creates a venv, installs the Python packages and starts the
+shell automatically — first run is the slow one. If you'd rather have the
+Kraken local AI models too, download the matching
+`Nautilus-Kraken-Local-Models-vX.Y.Z.zip` and unzip it into the same
+`Nautilus/` folder.
 
 ## What actually works right now
 
